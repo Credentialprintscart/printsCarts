@@ -223,14 +223,13 @@
 }
 
 /* Reduce Navbar Spacer Gap for Policy Pages */
-:global(.navbar-spacer), 
-.navbar-spacer {
+.policy-page-wrapper .navbar-spacer {
     height: 60px !important;
 }
 
 @media (min-width: 768px) {
-    :global(.navbar-spacer),
-    .navbar-spacer {
+    /* Reduce Navbar Spacer Gap for Policy Pages */
+    .policy-page-wrapper .navbar-spacer {
         height: 80px !important;
     }
 }

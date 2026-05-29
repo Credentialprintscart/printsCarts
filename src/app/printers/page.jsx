@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Printers from '@/pages/Printers';
 
 export const metadata = {
@@ -5,4 +6,10 @@ export const metadata = {
   description: 'Browse our wide range of high-quality printers for home and office.',
 };
 
-export default function Page() { return <Printers />; }
+export default function Page() { 
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Printers />
+    </Suspense>
+  );
+}

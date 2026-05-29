@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import InkToner from '@/pages/InkToner';
 
 export const metadata = {
@@ -5,4 +6,10 @@ export const metadata = {
   description: 'Genuine-quality ink and toner cartridges for all major printer brands.',
 };
 
-export default function Page() { return <InkToner />; }
+export default function Page() { 
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InkToner />
+    </Suspense>
+  );
+}
