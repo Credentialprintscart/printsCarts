@@ -1,0 +1,84 @@
+.transparency-commitment {
+    padding: 100px 20px;
+    background: #fff;
+}
+
+.commitment-inner-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.transparency-commitment .section-title {
+    font-size: 42px;
+    font-weight: 800;
+    color: #0f3d91;
+    margin-bottom: 60px;
+    text-align: center;
+}
+
+.commitment-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+.commitment-intro p {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 24px;
+    font-weight: 600;
+}
+
+.transparency-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.transparency-list li {
+    font-size: 17px;
+    color: #444;
+    margin-bottom: 16px;
+    padding-left: 32px;
+    position: relative;
+}
+
+.transparency-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #0f3d91;
+    font-weight: 800;
+}
+
+.trademark-card {
+    background: #f8fafc;
+    padding: 40px;
+    border-radius: 20px;
+    border-left: 6px solid #0f3d91;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.trademark-notice {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #475569;
+    font-style: italic;
+    margin: 0 !important;
+}
+
+@media (max-width: 968px) {
+    .transparency-commitment {
+        padding: 60px 20px;
+    }
+
+    .commitment-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .transparency-commitment .section-title {
+        font-size: 32px;
+    }
+}

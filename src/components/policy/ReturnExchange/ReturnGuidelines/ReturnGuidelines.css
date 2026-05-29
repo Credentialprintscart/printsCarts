@@ -1,0 +1,103 @@
+.return-guidelines {
+    padding-bottom: 60px;
+}
+
+.guidelines-container h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #0f3d91;
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.guidelines-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+}
+
+.guidelines-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 16px;
+    border: 1.5px solid #eef2f6;
+    transition: all 0.3s ease;
+}
+
+.guidelines-card:hover {
+    border-color: #0f3d91;
+    box-shadow: 0 10px 25px rgba(15, 61, 145, 0.05);
+}
+
+.guidelines-card.full-width {
+    grid-column: span 2;
+}
+
+.guidelines-card h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.guidelines-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.guidelines-list li {
+    padding-left: 30px;
+    position: relative;
+    margin-bottom: 15px;
+    font-size: 15px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.guidelines-list.eligible li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #10b981;
+    font-weight: bold;
+}
+
+.guidelines-list.non-returnable li::before {
+    content: '✕';
+    position: absolute;
+    left: 0;
+    color: #ef4444;
+    font-weight: bold;
+}
+
+.packaging-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: #f8faff;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.packaging-info svg {
+    color: #0f3d91;
+    flex-shrink: 0;
+}
+
+.packaging-info p {
+    font-size: 15px;
+    color: #444;
+    margin: 0;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .guidelines-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .guidelines-card.full-width {
+        grid-column: span 1;
+    }
+}

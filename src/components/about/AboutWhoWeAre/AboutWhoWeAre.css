@@ -1,0 +1,84 @@
+.who-we-are {
+    padding: 100px 20px;
+    background: #fff;
+}
+
+.who-we-are-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.who-we-are-header {
+    margin-bottom: 48px;
+    text-align: center;
+}
+
+.section-tag {
+    font-size: 14px;
+    font-weight: 700;
+    color: #4a90e2;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.who-we-are h2 {
+    font-size: 42px;
+    font-weight: 800;
+    color: #0f3d91;
+    margin: 0;
+}
+
+.who-we-are-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.who-we-are-highlight {
+    font-size: 24px;
+    line-height: 1.5;
+    color: #333;
+    text-align: center;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 40px;
+}
+
+.who-we-are-highlight strong {
+    color: #0f3d91;
+}
+
+.who-we-are-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+}
+
+.who-we-are-details p {
+    font-size: 17px;
+    line-height: 1.8;
+    color: #555;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .who-we-are {
+        padding: 60px 20px;
+    }
+
+    .who-we-are h2 {
+        font-size: 32px;
+    }
+
+    .who-we-are-highlight {
+        font-size: 20px;
+    }
+
+    .who-we-are-details {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+}

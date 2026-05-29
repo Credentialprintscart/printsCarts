@@ -1,0 +1,176 @@
+.offers-section {
+    width: 100%;
+    background: #f4f6f9;
+    padding: 90px 20px;
+}
+
+.offers-container {
+    max-width: 1250px;
+    margin: 0 auto;
+}
+
+.offers-title {
+    text-align: center;
+    font-size: 56px;
+    font-weight: 800;
+    color: #0d3f97;
+    margin-bottom: 70px;
+    line-height: 1.1;
+}
+
+.offers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+.offer-card {
+    background: #ffffff;
+    border-radius: 28px;
+    padding: 42px 40px;
+    min-height: 480px;
+    transition: all 0.35s ease;
+    border: 1px solid #e9edf5;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.04);
+}
+
+.offer-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 18px 40px rgba(13, 63, 151, 0.1);
+}
+
+.offer-icon {
+    width: 64px;
+    height: 64px;
+    background: #0d4aad;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-bottom: 28px;
+}
+
+.offer-card h3 {
+    font-size: 24px;
+    line-height: 1.5;
+    font-weight: 800;
+    color: #0d3f97;
+    margin-bottom: 22px;
+}
+
+.offer-card p {
+    font-size: 18px;
+    line-height: 2;
+    color: #4b5563;
+    font-weight: 400;
+}
+
+.offer-details-list {
+    margin: 20px 0;
+    padding-left: 20px;
+    list-style-type: disc;
+}
+
+.offer-details-list li {
+    font-size: 17px;
+    color: #4b5563;
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.offer-note {
+    margin-top: 20px;
+    font-style: italic;
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+    color: #6b7280 !important;
+}
+
+/* =========================
+   Large Tablet
+========================= */
+
+@media (max-width: 1100px) {
+    .offers-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .offers-title {
+        font-size: 48px;
+    }
+}
+
+/* =========================
+   Tablet
+========================= */
+
+@media (max-width: 768px) {
+    .offers-section {
+        padding: 70px 18px;
+    }
+
+    .offers-title {
+        font-size: 38px;
+        margin-bottom: 50px;
+    }
+
+    .offers-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .offer-card {
+        padding: 32px 28px;
+        min-height: auto;
+        border-radius: 22px;
+    }
+
+    .offer-card h3 {
+        font-size: 22px;
+    }
+
+    .offer-card p {
+        font-size: 16px;
+        line-height: 1.8;
+    }
+
+    .offer-icon {
+        width: 58px;
+        height: 58px;
+    }
+}
+
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 480px) {
+    .offers-section {
+        padding: 60px 16px;
+    }
+
+    .offers-title {
+        font-size: 32px;
+        margin-bottom: 40px;
+    }
+
+    .offer-card {
+        padding: 28px 22px;
+    }
+
+    .offer-card h3 {
+        font-size: 20px;
+        line-height: 1.4;
+    }
+
+    .offer-card p {
+        font-size: 15px;
+    }
+
+    .offer-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+    }
+}

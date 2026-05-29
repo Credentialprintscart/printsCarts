@@ -1,0 +1,156 @@
+.home-about {
+    padding: 120px 20px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.home-about-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 100px;
+    align-items: center;
+}
+
+.section-subtitle {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0c367a; /* Darker navy for high contrast */
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.section-title {
+    font-size: 48px;
+    font-weight: 800;
+    color: #0f3d91;
+    margin-bottom: 32px;
+    line-height: 1.1;
+}
+
+.home-about-content p {
+    font-size: 18px;
+    line-height: 1.8;
+    color: #444;
+    margin-bottom: 28px;
+}
+
+.btn-secondary {
+    display: inline-block;
+    padding: 16px 36px;
+    background: #f0f4f8;
+    color: #0f3d91;
+    border-radius: 50px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-top: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 2px solid transparent;
+}
+
+.btn-secondary:hover {
+    background: #0f3d91;
+    color: #fff;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(15, 61, 145, 0.2);
+}
+
+.home-about-image {
+    position: relative;
+    border-radius: 30px;
+}
+
+.home-about-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 30px;
+    display: block;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+}
+
+.experience-badge {
+    position: absolute;
+    bottom: -40px;
+    right: -40px;
+    background: linear-gradient(135deg, #0f3d91, #1e5bb8);
+    color: #fff;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 10px solid #fff;
+    box-shadow: 0 15px 35px rgba(15, 61, 145, 0.3);
+    z-index: 2;
+}
+
+.experience-badge .years {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 2px;
+}
+
+.experience-badge .text {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 1024px) {
+    .home-about-container {
+        gap: 60px;
+    }
+    .section-title {
+        font-size: 38px;
+    }
+}
+
+@media (max-width: 968px) {
+    .home-about {
+        padding: 80px 20px;
+    }
+
+    .home-about-container {
+        grid-template-columns: 1fr;
+        gap: 60px;
+        text-align: center;
+    }
+
+    .section-title {
+        font-size: 34px;
+    }
+
+    .experience-badge {
+        bottom: -20px;
+        right: 0;
+        width: 120px;
+        height: 120px;
+        border-width: 6px;
+    }
+
+    .experience-badge .years {
+        font-size: 18px;
+    }
+
+    .experience-badge .text {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-title {
+        font-size: 28px;
+    }
+    
+    .btn-secondary {
+        width: 100%;
+    }
+}

@@ -1,0 +1,38 @@
+.thank-you-section {
+    padding: 100px 20px 120px;
+    background: linear-gradient(135deg, #0f3d91 0%, #1e5bb8 100%);
+    color: #fff;
+    text-align: center;
+}
+
+.thank-you-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.thank-you-section .section-title {
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 24px;
+    color: aliceblue;
+}
+
+.thank-you-section p {
+    font-size: 20px;
+    line-height: 1.8;
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .thank-you-section {
+        padding: 60px 20px 80px;
+    }
+
+    .thank-you-section .section-title {
+        font-size: 32px;
+    }
+
+    .thank-you-section p {
+        font-size: 17px;
+    }
+}

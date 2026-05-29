@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and private panels
+Disallow: /admin
+Disallow: /api
+
+Sitemap: https://www.printscarts.com/sitemap.xml

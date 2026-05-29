@@ -1,0 +1,115 @@
+.home-peace {
+    padding: 120px 20px;
+    background: linear-gradient(135deg, rgba(15, 61, 145, 0.95), rgba(30, 91, 184, 0.95)),
+        url('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1920') center/cover no-repeat;
+    background-attachment: fixed;
+    color: #fff;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.home-peace::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+}
+
+.peace-container {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.peace-content h2 {
+    font-size: 56px;
+    font-weight: 800;
+    margin-bottom: 32px;
+    line-height: 1.1;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.peace-content p {
+    font-size: 22px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    opacity: 0.95;
+    font-weight: 400;
+}
+
+.peace-actions {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin-top: 48px;
+    flex-wrap: wrap;
+}
+
+.peace-actions .home-btn {
+    padding: 18px 48px;
+    border-radius: 50px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.peace-actions .home-btn.primary {
+    background: #fff;
+    color: #0f3d91;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.peace-actions .home-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 2px solid #fff;
+    color: #fff;
+}
+
+.peace-actions .home-btn:hover {
+    transform: translateY(-8px) scale(1.05);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.peace-actions .home-btn.primary:hover {
+    background: #f8faff;
+}
+
+.peace-actions .home-btn.secondary:hover {
+    background: #fff;
+    color: #0f3d91;
+}
+
+@media (max-width: 768px) {
+    .home-peace {
+        padding: 100px 20px;
+    }
+
+    .peace-content h2 {
+        font-size: 38px;
+    }
+
+    .peace-content p {
+        font-size: 18px;
+    }
+
+    .peace-actions {
+        flex-direction: column;
+        gap: 16px;
+        max-width: 320px;
+        margin: 40px auto 0;
+    }
+
+    .peace-actions .home-btn {
+        width: 100%;
+        padding: 16px 32px;
+    }
+}

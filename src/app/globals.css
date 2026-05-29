@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-background: var(--bg);
+  --color-card: var(--card);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+}
+
+:root {
+  /* Brand Colors */
+  --primary: #0f3d91;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #1e5bb8;
+  --secondary-foreground: #ffffff;
+
+  /* UI Colors */
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #f1f5f9;
+
+  /* Status Colors */
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+
+  /* Fonts */
+  --font-heading: 'Poppins', system-ui, sans-serif;
+  --font-body: 'Poppins', system-ui, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #333;
+  line-height: 1.6;
+  background: #fff;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Smooth scrolling handled via data attribute for Next.js compatibility */
+html[data-scroll-behavior="smooth"] {
+  scroll-behavior: smooth;
+}
+
+/* Admin Dashboard Layout */
+.admin-dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.admin-main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.admin-header {
+    height: 64px;
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.admin-content-area {
+    padding: 24px;
+    flex: 1;
+}
+
+.mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+}
+
+@media (max-width: 1024px) {
+    .admin-header {
+        padding: 0 16px;
+    }
+}
+
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 32px !important;
+  }
+  
+  .filters-bar {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+
+  .filters-bar > div {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .filters-bar div[style*="flex:"] {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+
+  .printers-grid, .products-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .contact-main-content {
+    grid-template-columns: 1fr !important;
+    margin-top: 20px !important;
+    padding: 0 16px !important;
+  }
+
+  article h1 {
+    font-size: 28px !important;
+  }
+
+  article h2 {
+    font-size: 22px !important;
+  }
+
+  article p {
+    font-size: 16px !important;
+  }
+
+  article img {
+    border-radius: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-container {
+    padding: 10px 16px !important;
+  }
+  
+  .nav-logo img {
+    height: 32px !important;
+  }
+
+  .page-subtitle {
+    font-size: 15px !important;
+  }
+}
