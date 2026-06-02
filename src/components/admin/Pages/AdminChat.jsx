@@ -1,8 +1,12 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchAllChats, fetchChatById, sendChatMessage, markChatAsRead } from '../../../redux/actions/chatActions';
-import { Search, Send, User, MoreVertical, Phone, Video, ChevronLeft, MessageCircle } from 'lucide-react';
+import { fetchAllChats, fetchChatById, sendChatMessage, markChatAsRead } from '@/redux/actions/chatActions';
+import { 
+    Search, Send, User, MessageSquare, 
+    ChevronLeft, Activity, Globe, Clock,
+    CheckCircle2, Shield
+} from 'lucide-react';
 import io from 'socket.io-client';
 
 const AdminChat = () => {
@@ -27,17 +31,21 @@ const AdminChat = () => {
         if (userInfo && userInfo.isAdmin) {
             dispatch(fetchAllChats());
 
-            // Initialize Socket.io
-            const newSocket = io(process.env.NEXT_PUBLIC_API_URL.replace('/api', ''), {
-                auth: { token: userInfo.token }
+            const socketUrl = process.env.NEXT_PUBLIC_API_URL?.startsWith('http') 
+                ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '') 
+                : window.location.origin;
+
+            const newSocket = io(socketUrl, {
+                auth: { token: userInfo.token },
+                path: '/socket.io',
+                transports: ['websocket', 'polling']
             });
 
             newSocket.on('connect', () => {
-                console.log('Admin connected to chat');
+                console.log('Admin Secure Link Established');
             });
 
             newSocket.on('new-message', (data) => {
-                // Refresh chat list and current chat if it's the active one
                 dispatch(fetchAllChats());
                 if (activeChat && data.chatId === activeChat._id) {
                     dispatch(fetchChatById(data.chatId));
@@ -45,10 +53,9 @@ const AdminChat = () => {
             });
 
             setSocket(newSocket);
-
             return () => newSocket.close();
         }
-    }, [dispatch, userInfo]);
+    }, [dispatch, userInfo, activeChat?._id]);
 
     useEffect(() => {
         scrollToBottom();
@@ -63,12 +70,10 @@ const AdminChat = () => {
         setShowMobileList(false);
         dispatch(fetchChatById(chat._id));
 
-        // Mark as read
         if (chat.unreadCount > 0) {
             dispatch(markChatAsRead(chat._id));
         }
 
-        // Join chat room
         if (socket) {
             socket.emit('join-chat', chat._id);
         }
@@ -80,7 +85,6 @@ const AdminChat = () => {
 
         dispatch(sendChatMessage(activeChat._id, newMessage));
 
-        // Emit socket event for real-time update
         if (socket) {
             socket.emit('send-message', {
                 chatId: activeChat._id,
@@ -102,60 +106,75 @@ const AdminChat = () => {
     ) || [];
 
     return (
-        <div className="flex h-[calc(100vh-120px)] bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative">
+        <div className="flex h-[calc(100vh-160px)] bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden relative animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Sidebar List */}
             <div className={`
-                w-full lg:w-80 border-r border-slate-200 flex flex-col bg-white z-10
+                w-full lg:w-96 border-r border-slate-100 flex flex-col bg-white z-10
                 ${showMobileList ? 'flex' : 'hidden lg:flex'}
             `}>
-                <div className="p-4 border-b border-slate-200">
-                    <h2 className="font-bold text-lg text-slate-900 mb-3 flex items-center gap-2">
-                        <MessageCircle size={20} className="text-blue-600" />
-                        Customer Chats
-                    </h2>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <div className="p-8 border-b border-slate-50 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                                <MessageSquare size={20} strokeWidth={2.5} />
+                            </div>
+                            <h2 className="font-black text-xl text-slate-900 tracking-tight">Signal Feed</h2>
+                        </div>
+                        <div className="px-3 py-1 bg-slate-50 rounded-lg text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">
+                            {chats?.length || 0} Entities
+                        </div>
+                    </div>
+                    <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
                         <input
                             type="text"
-                            placeholder="Search chats..."
+                            placeholder="Search vector, identity..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:bg-white outline-none transition-all font-bold text-sm"
                         />
                     </div>
                 </div>
-                <div className="flex-1 overflow-y-auto">
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
                     {loading ? (
-                        <div className="p-4 text-center text-slate-400">Loading chats...</div>
-                    ) : error ? (
-                        <div className="p-4 text-center text-red-500">{error}</div>
+                        <div className="p-20 text-center space-y-4">
+                            <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                            <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Syncing Signal...</p>
+                        </div>
                     ) : filteredChats.length === 0 ? (
-                        <div className="p-4 text-center text-slate-400">No chats found</div>
+                        <div className="p-20 text-center opacity-40">
+                            <Globe size={48} className="mx-auto mb-4" />
+                            <p className="font-black uppercase tracking-widest text-xs">No Active Vectors</p>
+                        </div>
                     ) : (
                         filteredChats.map(chat => (
                             <div
                                 key={chat._id}
                                 onClick={() => handleChatSelect(chat)}
-                                className={`p-4 flex gap-3 hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-50 ${activeChat?._id === chat._id ? 'bg-blue-50/50' : ''}`}
+                                className={`px-8 py-6 flex gap-4 hover:bg-blue-50/30 cursor-pointer transition-all border-b border-slate-50 relative group ${activeChat?._id === chat._id ? 'bg-blue-50/50' : ''}`}
                             >
-                                <div className="relative">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                                        {chat.user?.name?.charAt(0) || 'U'}
+                                {activeChat?._id === chat._id && (
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-full"></div>
+                                )}
+                                <div className="relative shrink-0">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center text-slate-600 font-black text-sm shadow-inner group-hover:scale-105 transition-transform">
+                                        {(chat.user?.name || 'U').charAt(0).toUpperCase()}
                                     </div>
-                                    <div className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${chat.status === 'active' ? 'bg-green-500' : 'bg-slate-400'}`} />
+                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-4 border-white rounded-full ${chat.status === 'active' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex justify-between items-start">
-                                        <h4 className="font-semibold text-sm text-slate-900 truncate">{chat.user?.name || 'Unknown User'}</h4>
-                                        <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                                    <div className="flex justify-between items-start mb-1">
+                                        <h4 className="font-black text-sm text-slate-900 truncate tracking-tight">{chat.user?.name || 'Anonymous Entity'}</h4>
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-1 whitespace-nowrap ml-2">
                                             {new Date(chat.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-slate-500 truncate mt-0.5">{chat.lastMessage || 'No messages yet'}</p>
+                                    <p className="text-xs text-slate-500 truncate font-medium">{chat.lastMessage || 'Signal initialized...'}</p>
                                 </div>
                                 {chat.unreadCount > 0 && (
-                                    <div className="flex flex-col justify-center">
-                                        <span className="bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                    <div className="shrink-0 flex items-center">
+                                        <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg shadow-blue-600/20 animate-pulse">
                                             {chat.unreadCount}
                                         </span>
                                     </div>
@@ -174,41 +193,54 @@ const AdminChat = () => {
                 {activeChat && currentChat ? (
                     <>
                         {/* Chat Header */}
-                        <div className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
+                        <div className="h-24 bg-white border-b border-slate-100 px-10 flex items-center justify-between shrink-0">
+                            <div className="flex items-center gap-4">
                                 <button
                                     onClick={() => setShowMobileList(true)}
-                                    className="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg flex items-center gap-1"
+                                    className="lg:hidden p-3 -ml-4 text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
                                 >
-                                    <ChevronLeft size={20} />
-                                    <span className="text-xs font-bold">Back</span>
+                                    <ChevronLeft size={24} />
                                 </button>
                                 <div className="relative">
-                                    <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                                        {activeChat.user?.name?.charAt(0) || 'U'}
+                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-900 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-lg shadow-blue-900/20">
+                                        {(activeChat.user?.name || 'U').charAt(0).toUpperCase()}
                                     </div>
-                                    <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-white rounded-full ${activeChat.status === 'active' ? 'bg-green-500' : 'bg-slate-400'}`} />
+                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-4 border-white rounded-full ${activeChat.status === 'active' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-800 text-sm">{activeChat.user?.name || 'Unknown User'}</h3>
-                                    <p className="text-xs text-slate-500">{activeChat.user?.email || ''}</p>
+                                    <h3 className="font-black text-slate-900 tracking-tight leading-none mb-1.5">{activeChat.user?.name || 'External Entity'}</h3>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{activeChat.user?.email || 'Secure Channel'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="hidden md:flex items-center gap-3">
+                                <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                    <Shield size={14} className="text-emerald-500" /> Encrypted Link
                                 </div>
                             </div>
                         </div>
 
                         {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                        <div className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
                             {currentChat.messages && currentChat.messages.length > 0 ? (
                                 currentChat.messages.map((msg, index) => {
                                     const isAdmin = msg.sender.toString() === userInfo._id;
                                     return (
-                                        <div key={index} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
-                                            <div className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-4 py-3 text-sm shadow-sm ${isAdmin
-                                                ? 'bg-blue-600 text-white rounded-tr-none'
-                                                : 'bg-white text-slate-700 rounded-tl-none border border-slate-200'
-                                                }`}>
-                                                <p>{msg.message}</p>
-                                                <div className={`text-[10px] mt-1 text-right ${isAdmin ? 'text-blue-100' : 'text-slate-400'}`}>
+                                        <div key={index} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                                            <div className={`max-w-[80%] lg:max-w-[60%] space-y-2`}>
+                                                <div className={`rounded-[2rem] px-6 py-4 shadow-sm relative group ${isAdmin
+                                                    ? 'bg-[#0f172a] text-white rounded-tr-none border border-slate-800'
+                                                    : 'bg-white text-slate-700 rounded-tl-none border border-slate-100'
+                                                    }`}>
+                                                    <p className="text-sm font-medium leading-relaxed">{msg.message}</p>
+                                                    <div className={`absolute top-0 ${isAdmin ? '-left-12' : '-right-12'} opacity-0 group-hover:opacity-100 transition-opacity p-2 text-slate-400`}>
+                                                        <Clock size={14} />
+                                                    </div>
+                                                </div>
+                                                <div className={`flex items-center gap-2 text-[9px] font-black uppercase tracking-widest ${isAdmin ? 'justify-end text-slate-400' : 'justify-start text-slate-400'}`}>
+                                                    {isAdmin ? <CheckCircle2 size={10} className="text-blue-500" /> : <User size={10} />}
                                                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </div>
                                             </div>
@@ -216,35 +248,48 @@ const AdminChat = () => {
                                     );
                                 })
                             ) : (
-                                <div className="text-center text-slate-400 py-10">No messages yet. Start the conversation!</div>
+                                <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4 opacity-40">
+                                    <Activity size={48} className="animate-pulse" />
+                                    <p className="font-black text-[10px] uppercase tracking-[0.2em]">Initiate Signal Exchange</p>
+                                </div>
                             )}
                             <div ref={messagesEndRef} />
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-4 bg-white border-t border-slate-200">
-                            <form onSubmit={handleSend} className="flex gap-2">
-                                <input
-                                    type="text"
-                                    className="flex-1 bg-slate-100 border-0 rounded-full px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Type your message..."
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                />
+                        <div className="p-8 bg-white border-t border-slate-100">
+                            <form onSubmit={handleSend} className="flex gap-4">
+                                <div className="flex-1 relative group">
+                                    <input
+                                        type="text"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-[1.5rem] pl-6 pr-12 py-5 text-sm font-bold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:bg-white outline-none transition-all"
+                                        placeholder="Transmit signal..."
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                    />
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 flex gap-2">
+                                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                    </div>
+                                </div>
                                 <button
                                     type="submit"
-                                    className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-shadow shadow-md shrink-0"
+                                    disabled={!newMessage.trim()}
+                                    className="px-8 bg-[#0f172a] text-white rounded-[1.5rem] hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10 active:scale-95 disabled:opacity-30 flex items-center justify-center gap-3 group/send"
                                 >
-                                    <Send size={18} className="translate-x-0.5" />
+                                    <span className="font-black text-xs uppercase tracking-[0.2em] hidden sm:block">Transmit</span>
+                                    <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                                 </button>
                             </form>
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex items-center justify-center text-slate-400">
-                        <div className="text-center">
-                            <MessageCircle size={48} className="mx-auto mb-3 opacity-50" />
-                            <p className="font-medium">Select a chat to start messaging</p>
+                    <div className="flex-1 flex flex-col items-center justify-center text-slate-300 gap-6 opacity-40 p-20 text-center">
+                        <div className="p-8 bg-slate-100 rounded-[3rem] border border-slate-200">
+                            <MessageSquare size={80} strokeWidth={1} />
+                        </div>
+                        <div>
+                            <h3 className="font-black text-2xl text-slate-900 tracking-tight mb-2">Operational Relay</h3>
+                            <p className="font-medium text-slate-500 text-sm max-w-xs mx-auto uppercase tracking-widest">Select a target vector to establish a secure communication link.</p>
                         </div>
                     </div>
                 )}
@@ -254,4 +299,3 @@ const AdminChat = () => {
 };
 
 export default AdminChat;
-

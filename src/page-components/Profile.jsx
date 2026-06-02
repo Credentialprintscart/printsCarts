@@ -105,13 +105,13 @@ const Profile = () => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
                                     <div>
                                         <span style={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.2em' }}>Authentication Node</span>
-                                        <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', margin: '4px 0 0' }}>Credential Registry</h2>
+                                        <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', margin: '4px 0 0' }}>User Profile</h2>
                                     </div>
                                     <button 
                                         onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
                                         style={{ padding: '14px 28px', background: isEditing ? '#0f3d91' : '#f8fafc', color: isEditing ? '#ffffff' : '#0f3d91', border: 'none', borderRadius: '14px', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.3s ease' }}
                                     >
-                                        {isEditing ? 'Confirm Updates' : 'Revise Credentials'}
+                                        {isEditing ? 'Confirm Updates' : 'Edit Profile'}
                                     </button>
                                 </div>
 
@@ -125,12 +125,8 @@ const Profile = () => {
                                         )}
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <label style={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Email Secure</label>
+                                        <label style={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Email</label>
                                         <div style={{ padding: '18px 24px', background: '#f8fafc', borderRadius: '16px', fontSize: '16px', fontWeight: '800', color: '#0f172a', opacity: 0.7 }}>{user.email}</div>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <label style={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Access Tier</label>
-                                        <div style={{ padding: '18px 24px', background: '#f0f4ff', borderRadius: '16px', fontSize: '16px', fontWeight: '900', color: '#0f3d91', textTransform: 'capitalize' }}>{user.role || 'Partner'}</div>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                         <label style={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Member Since</label>
@@ -145,7 +141,7 @@ const Profile = () => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
                                     <div>
                                         <span style={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.2em' }}>Procurement Logs</span>
-                                        <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', margin: '4px 0 0' }}>Order History</h2>
+                                        <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', margin: '4px 0 0' }}>Orders</h2>
                                     </div>
                                     <div style={{ color: '#0f3d91', fontSize: '12px', fontWeight: '900', background: '#f0f4ff', padding: '8px 16px', borderRadius: '100px' }}>Total Records: {orders?.length || 0}</div>
                                 </div>
@@ -164,7 +160,7 @@ const Profile = () => {
                                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead>
                                                 <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
-                                                    <th style={{ padding: '16px 0', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase' }}>Registry ID</th>
+                                                    <th style={{ padding: '16px 0', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase' }}>Order ID</th>
                                                     <th style={{ padding: '16px 0', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase' }}>Placed Date</th>
                                                     <th style={{ padding: '16px 0', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase' }}>Total</th>
                                                     <th style={{ padding: '16px 0', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase' }}>Status</th>

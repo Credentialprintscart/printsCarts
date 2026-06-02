@@ -1,111 +1,50 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateUserProfile, logout } from '../../../redux/actions/userActions';
-import AdminSidebar from './AdminSidebar';
+import { useRouter } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
 import { io } from 'socket.io-client';
-import {
-    Bell,
-    User,
-    Search,
-    LogOut,
+import { 
+    Bell, 
+    Search, 
+    Menu, 
+    User, 
+    LogOut, 
     Settings,
-    Menu,
-    X,
-    Clock,
-    Camera,
-    Lock,
-    Save,
-    Shield,
+    ShoppingCart,
     MessageSquare,
-    ShoppingCart
+    Clock,
+    X,
+    ChevronDown,
+    Calendar,
+    LayoutDashboard
 } from 'lucide-react';
+import AdminSidebar from './AdminSidebar';
+import { logout } from '@/redux/actions/userActions';
+import '@/app/globals.css';
 
 const AdminLayout = ({ children }) => {
-    const router = useRouter();
-    const pathname = usePathname();
-    const dispatch = useDispatch();
-
-    const userLogin = useSelector((state) => state.userLogin);
-    const { userInfo } = userLogin;
-
-    // Auth Check
-    useEffect(() => {
-        if (!userInfo || !userInfo.isAdmin) {
-            router.push('/admin/login');
-        }
-    }, [userInfo, router]);
-
-    // Time State
-    const [currentTime, setCurrentTime] = useState(new Date());
-
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    // Dropdown States
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
-    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-
-    // Profile Form State
-    const [profileMode, setProfileMode] = useState('details'); // details, edit, password
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [message, setMessage] = useState(null);
-
-    const userUpdateProfile = useSelector((state) => state.userUpdateProfile);
-    const { success: updateSuccess, loading: updateLoading } = userUpdateProfile;
-
-    useEffect(() => {
-        if (userInfo) {
-            setFirstName(userInfo.firstName || userInfo.name.split(' ')[0] || '');
-            setLastName(userInfo.lastName || userInfo.name.split(' ').slice(1).join(' ') || '');
-            setEmail(userInfo.email || '');
-        }
-    }, [userInfo]);
-
-    useEffect(() => {
-        if (updateSuccess) {
-            setProfileMode('details');
-            setMessage(null);
-            setPassword('');
-            setConfirmPassword('');
-        }
-    }, [updateSuccess]);
-
-    const submitHandler = (e) => {
-        e.preventDefault();
-        setMessage(null);
-
-        if (profileMode === 'password') {
-            if (password !== confirmPassword) {
-                setMessage('Passwords do not match');
-                return;
-            }
-            dispatch(updateUserProfile({ id: userInfo._id, password }));
-        } else {
-            dispatch(updateUserProfile({ id: userInfo._id, firstName, lastName, email }));
-        }
-    };
-
-    // Notifications State
     const [notifications, setNotifications] = useState([]);
-    const [socket, setSocket] = useState(null);
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [mounted, setMounted] = useState(false);
 
-    // Socket Initialization
+    const router = useRouter();
+    const dispatch = useDispatch();
+    const { userInfo } = useSelector((state) => state.userLogin);
+
     useEffect(() => {
-        const newSocket = io(process.env.NEXT_PUBLIC_API_URL);
-        setSocket(newSocket);
+        setMounted(true);
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        
+        if (!userInfo || !userInfo.isAdmin) {
+            router.push('/admin/login');
+        }
 
-        newSocket.on('newOrder', (order) => {
+        const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+        
+        socket.on('newOrder', (order) => {
             setNotifications(prev => [{
                 id: Date.now(),
                 type: 'order',
@@ -115,7 +54,7 @@ const AdminLayout = ({ children }) => {
             }, ...prev]);
         });
 
-        newSocket.on('newChat', (chat) => {
+        socket.on('newChat', (chat) => {
             setNotifications(prev => [{
                 id: Date.now(),
                 type: 'chat',
@@ -125,118 +64,164 @@ const AdminLayout = ({ children }) => {
             }, ...prev]);
         });
 
-        return () => newSocket.close();
-    }, []);
+        return () => {
+            clearInterval(timer);
+            socket.disconnect();
+        };
+    }, [userInfo, router]);
 
-    const logoutHandler = () => {
+    const handleLogout = () => {
         dispatch(logout());
-        router.push('/');
+        router.push('/admin/login');
     };
 
+    if (!mounted || !userInfo || !userInfo.isAdmin) return null;
+
     return (
-        <div className="admin-dashboard-layout">
-            {/* Mobile Sidebar Overlay */}
-            {isSidebarOpen && (
-                <div 
-                    className="mobile-overlay"
-                    onClick={() => setIsSidebarOpen(false)}
-                />
-            )}
+        <div className="flex h-screen bg-slate-50 overflow-hidden font-sans selection:bg-blue-100">
+            <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            {/* Sidebar */}
-            <AdminSidebar 
-                isOpen={isSidebarOpen} 
-                setIsOpen={setIsSidebarOpen}
-                activePath={pathname}
-            />
-
-            {/* Main Content */}
-            <div className="admin-main-wrapper">
-                {/* Header */}
-                <header className="admin-header">
-                    <div className="header-left">
-                        <button 
-                            className="mobile-menu-btn"
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                {/* Enhanced Top Header */}
+                <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-10 shrink-0 z-40 relative">
+                    <div className="flex items-center gap-6">
+                        <button
                             onClick={() => setIsSidebarOpen(true)}
+                            className="lg:hidden p-2.5 text-slate-500 hover:bg-slate-100 rounded-xl transition-all active:scale-95"
                         >
-                            <Menu size={20} />
+                            <Menu size={22} />
                         </button>
-                        <div className="search-bar">
-                            <Search size={18} />
-                            <input type="text" placeholder="Search for something..." />
+                        
+                        {/* Status/Clock Display */}
+                        <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-slate-600">
+                            <div className="flex items-center gap-2 pr-3 border-r border-slate-200">
+                                <Calendar size={14} className="text-blue-600" />
+                                <span className="text-[10px] font-black uppercase tracking-widest">
+                                    {currentTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Clock size={14} className="text-blue-600" />
+                                <span className="text-[10px] font-black uppercase tracking-widest tabular-nums">
+                                    {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="header-right">
-                        <div className="admin-clock">
-                            <Clock size={16} />
-                            <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div className="flex items-center gap-3 lg:gap-6">
+                        {/* Quick Search */}
+                        <div className="hidden md:flex relative group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={16} />
+                            <input 
+                                type="text" 
+                                placeholder="Search analytics..." 
+                                className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-64"
+                            />
                         </div>
 
                         {/* Notifications */}
-                        <div className="header-icon-dropdown">
-                            <button 
-                                className={`icon-btn ${notifications.some(n => !n.read) ? 'has-badge' : ''}`}
-                                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                        <div className="relative">
+                            <button
+                                onClick={() => { setIsNotifOpen(!isNotifOpen); setIsProfileOpen(false); }}
+                                className={`p-2.5 rounded-xl transition-all relative group ${isNotifOpen ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-900'}`}
                             >
-                                <Bell size={20} />
+                                <Bell size={22} className="group-hover:rotate-12 transition-transform" />
+                                {notifications.some(n => !n.read) && (
+                                    <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse"></span>
+                                )}
                             </button>
+
                             {isNotifOpen && (
-                                <div className="dropdown-panel notif-panel">
-                                    <div className="dropdown-header">
-                                        <h4>Notifications</h4>
-                                        <span>{notifications.filter(n => !n.read).length} New</span>
+                                <div className="absolute right-0 mt-4 w-96 bg-white rounded-[2rem] shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                                    <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                                        <div>
+                                            <h4 className="font-black text-xs text-slate-900 uppercase tracking-widest">Activity</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-0.5">Real-time system updates</p>
+                                        </div>
+                                        <span className="text-[10px] font-black bg-blue-600 text-white px-3 py-1 rounded-full shadow-lg shadow-blue-600/20">
+                                            {notifications.filter(n => !n.read).length} NEW
+                                        </span>
                                     </div>
-                                    <div className="dropdown-body">
+                                    <div className="max-h-[30rem] overflow-y-auto custom-scrollbar">
                                         {notifications.length > 0 ? (
                                             notifications.map(n => (
-                                                <div key={n.id} className={`notif-item ${!n.read ? 'unread' : ''}`}>
-                                                    <div className="notif-icon">
-                                                        {n.type === 'order' ? <ShoppingCart size={16} /> : <MessageSquare size={16} />}
+                                                <div key={n.id} className="p-5 border-b border-slate-50 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer group">
+                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${n.type === 'order' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
+                                                        {n.type === 'order' ? <ShoppingCart size={20} /> : <MessageSquare size={20} />}
                                                     </div>
-                                                    <div className="notif-content">
-                                                        <p>{n.message}</p>
-                                                        <span>{n.time}</span>
+                                                    <div className="space-y-1">
+                                                        <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">{n.message}</p>
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{n.time}</span>
                                                     </div>
+                                                    {!n.read && <div className="w-2 h-2 bg-blue-600 rounded-full ml-auto mt-2"></div>}
                                                 </div>
                                             ))
                                         ) : (
-                                            <p className="empty-msg">No new notifications</p>
+                                            <div className="p-16 text-center space-y-4">
+                                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
+                                                    <Bell size={32} className="text-slate-200" />
+                                                </div>
+                                                <p className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">No new alerts</p>
+                                            </div>
                                         )}
                                     </div>
-                                    <div className="dropdown-footer">
-                                        <button onClick={() => setNotifications(notifications.map(n => ({...n, read: true })))} className="text-xs font-bold text-slate-500 hover:text-slate-800">Mark All Read</button>
+                                    <div className="p-4 bg-slate-50/50 border-t border-slate-50 text-center">
+                                        <button className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:tracking-[0.2em] transition-all">Clear All Notifications</button>
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Profile */}
-                        <div className="header-profile-dropdown">
-                            <button 
-                                className="profile-btn"
-                                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                        <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+
+                        {/* Profile Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotifOpen(false); }}
+                                className="flex items-center gap-3 p-1.5 hover:bg-slate-50 rounded-[1.25rem] transition-all group active:scale-95"
                             >
-                                <div className="avatar-small">
-                                    {userInfo?.name?.charAt(0)}
+                                <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white text-sm font-black shadow-lg shadow-slate-900/20 group-hover:scale-105 transition-transform">
+                                    {userInfo.name.charAt(0).toUpperCase()}
                                 </div>
-                                <span>{userInfo?.name?.split(' ')[0]}</span>
+                                <div className="hidden sm:block text-left pr-2">
+                                    <p className="text-xs font-black text-slate-900 leading-none">{userInfo.name.split(' ')[0]}</p>
+                                    <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest mt-1.5">Administrator</p>
+                                </div>
+                                <ChevronDown size={14} className={`text-slate-400 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
                             </button>
+
                             {isProfileOpen && (
-                                <div className="dropdown-panel profile-panel">
-                                    <div className="profile-info-panel">
-                                        <div className="avatar-large">
-                                            {userInfo?.name?.charAt(0)}
+                                <div className="absolute right-0 mt-4 w-72 bg-white rounded-[2rem] shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+                                    <div className="p-8 border-b border-slate-50 bg-slate-50/50 text-center">
+                                        <div className="w-16 h-16 bg-slate-900 rounded-[1.5rem] flex items-center justify-center text-white text-2xl font-black mx-auto mb-4 shadow-xl shadow-slate-900/20">
+                                            {userInfo.name.charAt(0).toUpperCase()}
                                         </div>
-                                        <h4>{userInfo?.name}</h4>
-                                        <p>{userInfo?.email}</p>
+                                        <p className="text-sm font-black text-slate-900">{userInfo.name}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{userInfo.email}</p>
                                     </div>
-                                    <div className="dropdown-links">
-                                        <button onClick={() => { setIsProfileModalOpen(true); setIsProfileOpen(false); }}>
-                                            <User size={16} /> Profile Settings
-                                        </button>
-                                        <button onClick={logoutHandler} className="logout-btn">
-                                            <LogOut size={16} /> Logout
+                                    <div className="p-3">
+                                        {[
+                                            { label: 'Profile Settings', icon: User, action: () => router.push('/admin/settings') },
+                                            { label: 'System Logs', icon: LayoutDashboard, action: () => router.push('/admin/analytics') },
+                                            { label: 'Security', icon: Settings, action: () => router.push('/admin/settings') },
+                                        ].map((item, idx) => (
+                                            <button 
+                                                key={idx}
+                                                onClick={() => { item.action(); setIsProfileOpen(false); }}
+                                                className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-bold text-xs group"
+                                            >
+                                                <item.icon size={18} className="group-hover:scale-110 transition-transform" />
+                                                {item.label}
+                                            </button>
+                                        ))}
+                                        <div className="h-px bg-slate-50 my-2 mx-4"></div>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl text-red-600 hover:bg-red-50 transition-all font-black text-xs uppercase tracking-[0.2em]"
+                                        >
+                                            <LogOut size={18} />
+                                            Terminate Session
                                         </button>
                                     </div>
                                 </div>
@@ -245,96 +230,13 @@ const AdminLayout = ({ children }) => {
                     </div>
                 </header>
 
-                {/* Page Content */}
-                <main className="admin-content-area">
-                    {children}
+                {/* Main Content Area */}
+                <main className="flex-1 overflow-y-auto p-6 lg:p-10 custom-scrollbar bg-slate-50/50">
+                    <div className="max-w-[100rem] mx-auto">
+                        {children}
+                    </div>
                 </main>
             </div>
-
-            {/* Profile Modal */}
-            {isProfileModalOpen && (
-                <div className="admin-modal-overlay">
-                    <div className="admin-profile-modal">
-                        <div className="modal-header">
-                            <h3>Admin Profile Settings</h3>
-                            <button onClick={() => setIsProfileModalOpen(false)}><X size={20} /></button>
-                        </div>
-
-                        <div className="modal-tabs">
-                            <button 
-                                className={profileMode === 'details' ? 'active' : ''} 
-                                onClick={() => setProfileMode('details')}
-                            >
-                                <User size={16} /> Basic Info
-                            </button>
-                            <button 
-                                className={profileMode === 'password' ? 'active' : ''} 
-                                onClick={() => setProfileMode('password')}
-                            >
-                                <Lock size={16} /> Security
-                            </button>
-                        </div>
-
-                        <form onSubmit={submitHandler} className="modal-form">
-                            {message && <div className="alert error">{message}</div>}
-                            {profileMode === 'details' ? (
-                                <div className="form-grid">
-                                    <div className="form-group">
-                                        <label>First Name</label>
-                                        <input 
-                                            type="text" 
-                                            value={firstName} 
-                                            onChange={(e) => setFirstName(e.target.value)} 
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Last Name</label>
-                                        <input 
-                                            type="text" 
-                                            value={lastName} 
-                                            onChange={(e) => setLastName(e.target.value)} 
-                                        />
-                                    </div>
-                                    <div className="form-group full">
-                                        <label>Email Address</label>
-                                        <input 
-                                            type="email" 
-                                            value={email} 
-                                            onChange={(e) => setEmail(e.target.value)} 
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="form-grid">
-                                    <div className="form-group">
-                                        <label>New Password</label>
-                                        <input 
-                                            type="password" 
-                                            value={password} 
-                                            onChange={(e) => setPassword(e.target.value)} 
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Confirm Password</label>
-                                        <input 
-                                            type="password" 
-                                            value={confirmPassword} 
-                                            onChange={(e) => setConfirmPassword(e.target.value)} 
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="modal-footer">
-                                <button type="button" onClick={() => setIsProfileModalOpen(false)}>Cancel</button>
-                                <button type="submit" className="save-btn" disabled={updateLoading}>
-                                    {updateLoading ? 'Saving...' : <><Save size={16} /> Save Changes</>}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

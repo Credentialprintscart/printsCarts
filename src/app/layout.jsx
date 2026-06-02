@@ -3,7 +3,6 @@ import './globals.css';
 import { Providers } from './Providers';
 import Navbar from '@/components/navbar/Navbar';
 import Footer from '@/components/footer/Footer';
-import LiveChat from '@/components/LiveChat/LiveChat';
 import ScrollToTop from '@/components/common/ScrollToTop';
 
 export const metadata = {
@@ -15,7 +14,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <head>
-        <link rel="icon" href="/favicon.png" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
+        <link rel="preload" href="/PrintsCartslogo.png" as="image" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body>
@@ -23,7 +25,6 @@ export default function RootLayout({ children }) {
           <Navbar />
           <main>{children}</main>
           <Footer />
-          <LiveChat />
           <ScrollToTop />
         </Providers>
       </body>

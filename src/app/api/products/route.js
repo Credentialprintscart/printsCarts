@@ -35,23 +35,25 @@ export async function GET(req) {
     }
 
     if (brand && brand !== 'all') {
-      query.brand = { $regex: brand, $options: 'i' };
+      const escapedBrand = brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.brand = { $regex: escapedBrand, $options: 'i' };
     }
 
     if (search) {
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { shortDetails: { $regex: search, $options: 'i' } },
-        { shortSpecification: { $regex: search, $options: 'i' } },
-        { overview: { $regex: search, $options: 'i' } },
-        { technicalSpecification: { $regex: search, $options: 'i' } },
-        { brand: { $regex: search, $options: 'i' } },
-        { color: { $regex: search, $options: 'i' } },
-        { width: { $regex: search, $options: 'i' } },
-        { height: { $regex: search, $options: 'i' } },
-        { depth: { $regex: search, $options: 'i' } },
-        { screenSize: { $regex: search, $options: 'i' } }
+        { title: { $regex: escapedSearch, $options: 'i' } },
+        { description: { $regex: escapedSearch, $options: 'i' } },
+        { shortDetails: { $regex: escapedSearch, $options: 'i' } },
+        { shortSpecification: { $regex: escapedSearch, $options: 'i' } },
+        { overview: { $regex: escapedSearch, $options: 'i' } },
+        { technicalSpecification: { $regex: escapedSearch, $options: 'i' } },
+        { brand: { $regex: escapedSearch, $options: 'i' } },
+        { color: { $regex: escapedSearch, $options: 'i' } },
+        { width: { $regex: escapedSearch, $options: 'i' } },
+        { height: { $regex: escapedSearch, $options: 'i' } },
+        { depth: { $regex: escapedSearch, $options: 'i' } },
+        { screenSize: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 
@@ -108,6 +110,11 @@ export async function POST(req) {
     const depth = formData.get('depth');
     const screenSize = formData.get('screenSize');
     const reviews = formData.get('reviews');
+    const technology = formData.get('technology');
+    const usageCategory = formData.get('usageCategory');
+    const allInOneType = formData.get('allInOneType');
+    const wireless = formData.get('wireless');
+    const mainFunction = formData.get('mainFunction');
 
     if (!title || !price || !category) {
       return errorResponse('Please provide title, price, and category', 400);
@@ -117,6 +124,15 @@ export async function POST(req) {
     if (reviews) {
       parsedReviews = typeof reviews === 'string' ? JSON.parse(reviews) : reviews;
     }
+
+    const parseArrayField = (field) => {
+      if (!field) return [];
+      try {
+        return typeof field === 'string' ? JSON.parse(field) : field;
+      } catch (e) {
+        return [];
+      }
+    };
 
     const slug = title.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, "-");
 
@@ -136,6 +152,11 @@ export async function POST(req) {
       technicalSpecification,
       images: imageUrls,
       color, width, height, depth, screenSize,
+      technology: parseArrayField(technology),
+      usageCategory: parseArrayField(usageCategory),
+      allInOneType: parseArrayField(allInOneType),
+      wireless: wireless || '',
+      mainFunction: parseArrayField(mainFunction),
       reviews: parsedReviews,
       numReviews: parsedReviews.length,
       rating: parsedReviews.length > 0 ? parsedReviews.reduce((acc, item) => item.rating + acc, 0) / parsedReviews.length : 0,

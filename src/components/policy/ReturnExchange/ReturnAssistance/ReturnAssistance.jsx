@@ -39,22 +39,6 @@ const ReturnAssistance = () => {
                             <p>support@printscarts.com</p>
                         </div>
                     </a>
-
-                    {/* Live Chat */}
-                    <div
-                        className="assistance-item"
-                        onClick={handleLiveChat}
-                        role="button"
-                        tabIndex={0}
-                    >
-                        <div className="assistance-icon">
-                            💬
-                        </div>
-                        <div className="assistance-text">
-                            <h3>Live Chat</h3>
-                            <p>Chat with us now</p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,9 +14,8 @@ import {
 import { addToCart } from "../redux/actions/cartActions";
 import { 
   PRODUCT_CREATE_REVIEW_RESET,
-  PRODUCT_UPDATE_REVIEW_RESET
 } from "../redux/constants/productConstants";
-import { ShoppingCart, CreditCard } from 'lucide-react';
+import { ShoppingCart, CreditCard, ChevronLeft, Lock } from 'lucide-react';
 
 const ProductDetails = () => {
   const params = useParams();
@@ -39,24 +38,20 @@ const ProductDetails = () => {
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState("overview");
 
-  // Review State & Selectors
+  // Review State
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [canReview, setCanReview] = useState(false);
   const [showEligibilityToast, setShowEligibilityToast] = useState(false);
-  
-  // Toaster State
   const [showLoginToast, setShowLoginToast] = useState(false);
 
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
-  const userHasReviewed = product?.reviews?.some((r) => r.user === userInfo?._id);
-
   const productReviewCreate = useSelector((state) => state.productReviewCreate);
-  const { success: successProductReview, error: errorProductReview } = productReviewCreate;
+  const { success: successProductReview } = productReviewCreate;
 
   useEffect(() => {
     if (product && product.category) {
@@ -67,25 +62,17 @@ const ProductDetails = () => {
     const checkEligibility = async () => {
         if (userInfo && product && product._id) {
             try {
-                const config = {
-                    headers: {
-                        Authorization: `Bearer ${userInfo.token}`,
-                    },
-                };
-                const { data } = await axios.get(
-                    `${process.env.NEXT_PUBLIC_API_URL}/orders/check-review-eligibility/${product._id}`,
-                    config
-                );
+                const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+                const { data } = await axios.get(`${apiUrl}/orders/check-review-eligibility/${product._id}`, config);
                 setCanReview(data.canReview);
             } catch (error) {
-                console.error("Error checking review eligibility", error);
                 setCanReview(false);
             }
         }
     };
     checkEligibility();
-
-  }, [dispatch, product, userInfo]);
+  }, [product, userInfo, dispatch]);
 
   useEffect(() => {
     if (successProductReview) {
@@ -119,24 +106,16 @@ const ProductDetails = () => {
       setRating(review.rating);
       setComment(review.comment);
       setEditingReviewId(review._id);
-      window.scrollTo({ top: document.querySelector('.tabs-container').offsetTop, behavior: 'smooth' });
-  };
-const handleReviewClick = () => {
-    if (showReviewForm) {
-      setShowReviewForm(false);
-      return;
-    }
-    
-    if (canReview) {
       setShowReviewForm(true);
-    } else {
-      setShowEligibilityToast(true);
-      setTimeout(() => setShowEligibilityToast(false), 3000);
-    }
+      window.scrollTo({ top: document.querySelector('.pd-tabs-wrapper').offsetTop, behavior: 'smooth' });
   };
 
-  
-  // Zoom state
+  const handleReviewClick = () => {
+    if (showReviewForm) { setShowReviewForm(false); return; }
+    if (canReview) { setShowReviewForm(true); } 
+    else { setShowEligibilityToast(true); setTimeout(() => setShowEligibilityToast(false), 3000); }
+  };
+
   const [isHovered, setIsHovered] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
 
@@ -150,57 +129,6 @@ const handleReviewClick = () => {
     setQty(1);
   }, [product]);
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-         <div className="spinner"></div>
-         <p>Loading Product Details...</p>
-         <style>{`
-          .loading-container { padding-top: 120px; padding-bottom: 100px; text-align: center; min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-          .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0f3d91; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        `}</style>
-      </div>
-    );
-  }
-
-  if (error || !product) {
-    return (
-      <div style={{ padding: "120px 20px", textAlign: "center", minHeight: "60vh" }}>
-        <h2>Product not found</h2>
-      </div>
-    );
-  }
-
-  const images =
-    product.images && product.images.length > 0
-      ? product.images
-      : product.image
-      ? [product.image]
-      : [];
-  
-  const activeImgSrc = images[activeImageIndex];
-
-  const handleAddToCart = () => {
-    if (!userInfo) {
-       setShowLoginToast(true);
-       setTimeout(() => setShowLoginToast(false), 3000);
-       return;
-    }
-    dispatch(addToCart(product.slug || product._id, qty));
-    router.push('/cart');
-  };
-
-  const buyNowHandler = () => {
-      if (!userInfo) {
-        setShowLoginToast(true);
-        setTimeout(() => setShowLoginToast(false), 3000);
-        return;
-      }
-      dispatch(addToCart(product.slug || product._id, qty));
-      router.push('/cart?redirect=shipping');
-  };
-
   const handleMouseMove = (e) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - left) / width) * 100;
@@ -208,465 +136,295 @@ const handleReviewClick = () => {
     setZoomPos({ x, y });
   };
 
+  if (loading) return <div style={{ padding: '200px 0', textAlign: 'center' }}>Loading...</div>;
+  if (error || !product) return <div style={{ padding: '200px 0', textAlign: 'center' }}>Product not found.</div>;
+
+  const images = product.images?.length > 0 ? product.images : product.image ? [product.image] : [];
+  const activeImgSrc = images[activeImageIndex];
+
+  const handleAddToCart = () => {
+    if (!userInfo) { setShowLoginToast(true); setTimeout(() => setShowLoginToast(false), 3000); return; }
+    dispatch(addToCart(product.slug || product._id, qty));
+    router.push('/cart');
+  };
+
+  const buyNowHandler = () => {
+    if (!userInfo) { setShowLoginToast(true); setTimeout(() => setShowLoginToast(false), 3000); return; }
+    dispatch(addToCart(product.slug || product._id, qty));
+    router.push('/cart?redirect=shipping');
+  };
+
   return (
     <>
-      {showEligibilityToast && (
-        <div className="fixed top-24 right-5 bg-orange-500 text-white px-6 py-4 rounded-lg shadow-xl z-50 flex items-center gap-3 animate-fade-in-down">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div>
-            <h4 className="font-bold">Verification Failed</h4>
-            <p className="text-sm">Please purchase and receive this item to review.</p>
-          </div>
-        </div>
-      )}
+      <style>{`
+        .pd-wrapper { padding: 40px 0; background: #fff; }
+        .pd-layout { max-width: 1300px; margin: 0 auto; padding: 0 40px; display: grid; grid-template-columns: 1fr 480px; gap: 60px; align-items: start; }
+        
+        .pd-gallery { display: flex; flex-direction: column; gap: 24px; }
+        .pd-main-image-container { position: relative; border: 1px solid #f1f5f9; border-radius: 8px; aspect-ratio: 1/1; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; }
+        .pd-main-image-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; cursor: crosshair; }
+        .pd-main-image-wrapper img { max-width: 80%; max-height: 80%; object-fit: contain; transition: transform 0.2s ease-out; }
+        
+        .stock-badge-blue { position: absolute; top: 20px; left: 20px; background: #0f3d91; color: #fff; font-size: 9px; font-weight: 900; padding: 6px 12px; border-radius: 4px; display: flex; align-items: center; gap: 6px; z-index: 10; letter-spacing: 0.05em; }
+        
+        .slider-arrow-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: #fff; border: 1px solid #f1f5f9; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 24px; cursor: pointer; transition: all 0.2s; z-index: 10; }
+        .slider-arrow-nav:hover { color: #0f3d91; border-color: #0f3d91; }
+        .slider-arrow-nav.prev { left: 20px; }
+        .slider-arrow-nav.next { right: 20px; }
 
-      {showLoginToast && (
-        <div className="fixed top-24 right-5 bg-red-600 text-white px-6 py-4 rounded-lg shadow-xl z-50 flex items-center gap-3 animate-fade-in-down">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <div>
-            <h4 className="font-bold">Access Denied</h4>
-            <p className="text-sm">Please login to add items to cart</p>
-          </div>
+        .pd-thumbnails-strip { position: relative; padding-bottom: 12px; }
+        .pd-thumbnails-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; scrollbar-color: #f1f5f9 transparent; }
+        .pd-thumbnails-scroll::-webkit-scrollbar { height: 4px; }
+        .pd-thumbnails-scroll::-webkit-scrollbar-thumb { background: #f1f5f9; border-radius: 10px; }
+        
+        .thumb-box { min-width: 85px; height: 85px; border: 1px solid #f1f5f9; border-radius: 4px; padding: 8px; cursor: pointer; background: #fff; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .thumb-box.active { border-color: #0f3d91; border-width: 1.5px; }
+        .thumb-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        .pd-content { display: flex; flex-direction: column; gap: 28px; }
+        .tag-group { display: flex; gap: 10px; }
+        .badge-tag { font-size: 9px; font-weight: 900; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.05em; }
+        .brand-tag { background: #eff6ff; color: #0f3d91; }
+        .category-tag { background: #f8fafc; color: #94a3b8; }
+
+        .pd-title-main { font-size: 32px; font-weight: 800; color: #1e293b; margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
+        .pd-price-main { font-size: 32px; font-weight: 800; color: #1e293b; margin: 0; }
+        
+        .attr-badge-group { display: flex; gap: 16px; }
+        .mini-attr { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #f1f5f9; padding: 8px 16px; border-radius: 6px; }
+        .mini-label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+        .mini-val { font-size: 11px; font-weight: 900; color: #1e293b; text-transform: uppercase; }
+
+        .qty-picker-row { display: flex; flex-direction: column; gap: 12px; }
+        .qty-title { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .qty-flex { display: flex; align-items: center; gap: 20px; }
+        .qty-stepper { display: flex; align-items: center; border: 1px solid #f1f5f9; border-radius: 4px; overflow: hidden; height: 44px; background: #fff; }
+        .qty-stepper button { width: 44px; height: 100%; border: none; background: transparent; font-size: 18px; cursor: pointer; color: #1e293b; }
+        .qty-stepper input { width: 44px; height: 100%; border: none; border-left: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; text-align: center; font-size: 13px; font-weight: 800; outline: none; color: #1e293b; }
+        .qty-avail { font-size: 12px; color: #cbd5e1; font-weight: 700; }
+
+        .action-button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+        .action-btn { height: 56px; border-radius: 6px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.2s; border: none; }
+        .btn-cart-black { background: #000; color: #fff; }
+        .btn-cart-black:hover { background: #1e293b; }
+        .btn-buy-blue { background: #0f3d91; color: #fff; }
+        .btn-buy-blue:hover { background: #0a2a66; }
+
+        .trust-grid-simple { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-top: 32px; border-top: 1px solid #f1f5f9; margin-top: 12px; }
+        .trust-cell { display: flex; align-items: center; gap: 16px; }
+        .trust-icon-blue { color: #0f3d91; opacity: 0.8; }
+        .trust-info { display: flex; flex-direction: column; }
+        .trust-head { font-size: 12px; font-weight: 800; color: #1e293b; }
+        .trust-desc { font-size: 10px; color: #94a3b8; font-weight: 600; }
+
+        .pd-tabs-wrapper { margin-top: 80px; border-top: 1px solid #f1f5f9; }
+        .tabs-header { max-width: 1300px; margin: 0 auto; padding: 0 40px; display: flex; gap: 40px; }
+        .tab-trigger { padding: 24px 0; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; color: #94a3b8; border: none; background: none; cursor: pointer; position: relative; }
+        .tab-trigger.active { color: #0f3d91; }
+        .tab-trigger.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: #0f3d91; }
+        .tab-content-container { max-width: 1300px; margin: 0 auto; padding: 40px 40px 100px; overflow: hidden; }
+
+        .product-overview-content, .highlights-content, .short-specs-content { overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; max-width: 100%; }
+
+        @media (max-width: 1100px) {
+            .pd-layout { grid-template-columns: 1fr; gap: 48px; padding: 0 24px; }
+            .pd-content { gap: 24px; }
+            .pd-title-main { font-size: 26px; }
+            .tabs-header { padding: 0 24px; }
+            .tab-content-container { padding: 40px 24px; }
+        }
+      `}</style>
+
+      {showEligibilityToast && (
+        <div className="fixed top-24 right-5 bg-orange-500 text-white px-6 py-4 rounded-lg shadow-xl z-50 flex items-center gap-3">
+          <Lock size={20} />
+          <div><h4 className="font-bold">Verification Failed</h4><p className="text-sm">Please purchase and receive this item to review.</p></div>
         </div>
       )}
 
       <div className="pd-wrapper">
         <div className="pd-layout">
-          
-          {/* THUMBNAILS */}
-          <div className="pd-thumbs">
-            {images.map((img, i) => (
-              <img
-                key={i}
-                src={optimizeCloudinaryUrl(img, 200)}
-                className={i === activeImageIndex ? "active" : ""}
-                onMouseEnter={() => setActiveImageIndex(i)}
-                onClick={() => setActiveImageIndex(i)}
-                alt={`${product.title} view ${i + 1}`}
-              />
-            ))}
-          </div>
-
-          {/* MAIN IMAGE CONTAINER */}
-          <div className="pd-image-container">
-            <div 
-                className="pd-image-wrapper"
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                onMouseMove={handleMouseMove}
-            >
-              <img 
-                src={optimizeCloudinaryUrl(activeImgSrc, 1200)} 
-                alt={product.title} 
-                style={{
-                    transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                    transform: isHovered ? "scale(1.6)" : "scale(1)",
-                }}
-              />
+          <div className="pd-top-nav" style={{ gridColumn: '1 / -1', marginBottom: '10px' }}>
+            <div className="pd-breadcrumbs" style={{ display: 'flex', gap: '8px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#94a3b8' }}>
+                <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>Home</Link>
+                <span style={{ opacity: 0.5 }}>/</span>
+                <Link href="/shop" style={{ textDecoration: 'none', color: 'inherit' }}>Shop</Link>
+                <span style={{ opacity: 0.5 }}>/</span>
+                <span style={{ color: '#1e293b' }}>{product.title}</span>
             </div>
           </div>
 
-          {/* PRODUCT INFO */}
-          <div className="pd-info">
-            <span className="brand">{product.brand}</span>
-            <h1>{product.title || product.name}</h1>
-
-             {/* HIGHLIGHTS */}
-             {product.shortDetails && (
-              <div className="key-specs">
-                <h4>Highlights</h4>
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: product.shortDetails,
-                  }}
-                />
-              </div>
-            )}
-
-            <div className="rating-summary">
-                 <span className="stars">{"⭐".repeat(Math.round(product.rating || 0))}</span>
-                 <span className="rating-count">({product.numReviews || 0} reviews)</span>
-            </div>
-
-            <div className="price-section">
-                <span className="price">${product.price?.toFixed(2)}</span>
-                {product.oldPrice && (
-                    <span className="old-price">${product.oldPrice.toFixed(2)}</span>
-                )}
-                {product.countInStock > 0 ? (
-                    <span className="stock-status in-stock">In Stock</span>
-                ) : (
-                    <span className="stock-status out-stock">Out of Stock</span>
-                )}
-            </div>
-
-            {/* QUANTITY */}
-            {product.countInStock > 0 && (
-              <div className="qty-picker">
-                <span className="qty-label">Quantity:</span>
-                <div className="qty-controls">
-                  <button onClick={() => setQty(Math.max(1, qty - 1))} disabled={qty <= 1}>−</button>
-                  <input type="text" readOnly value={qty} />
-                  <button onClick={() => setQty(Math.min(product.countInStock, qty + 1))} disabled={qty >= product.countInStock}>+</button>
+          <div className="pd-gallery">
+            <div className="pd-main-image-container">
+              {product.countInStock > 0 && (
+                <div className="stock-badge-blue">
+                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                   IN STOCK
                 </div>
+              )}
+              <div className="pd-main-image-wrapper" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} onMouseMove={handleMouseMove}>
+                <img src={optimizeCloudinaryUrl(activeImgSrc, 1200)} alt={product.title} style={{ transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`, transform: isHovered ? "scale(1.5)" : "scale(1)" }} />
               </div>
-            )}
-
-            {/* ACTIONS */}
-            <div className="actions">
-              <button
-                className="btn-cart"
-                onClick={handleAddToCart}
-                disabled={product.countInStock === 0}
-              >
-                <ShoppingCart size={20} strokeWidth={2.5} />
-                {product.countInStock === 0 ? "OUT OF STOCK" : "ADD TO CART"}
-              </button>
-              <button 
-                className="btn-buy" 
-                disabled={product.countInStock === 0}
-                onClick={buyNowHandler}
-              >
-                <CreditCard size={20} strokeWidth={2.5} />
-                BUY NOW
-              </button>
+              {images.length > 1 && (
+                <>
+                  <button className="slider-arrow-nav prev" onClick={() => setActiveImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}>‹</button>
+                  <button className="slider-arrow-nav next" onClick={() => setActiveImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}>›</button>
+                </>
+              )}
             </div>
-
-
-          </div>
-        </div>
-
-        {/* ══ FLAGSHIP ASSET TABS ══════════════════════════════════════ */}
-        <div className="tabs-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            
-            {/* Tab header */}
-            <div className="flex border-b border-gray-100 px-4 sm:px-8 overflow-x-auto">
-              <div className="flex">
-                {['overview', 'specifications', 'reviews'].map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setTab(t)}
-                    style={{
-                      position: 'relative',
-                      padding: '24px 8px',
-                      marginRight: '48px',
-                      fontSize: '11px',
-                      fontWeight: '900',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.2em',
-                      transition: 'all 0.3s ease',
-                      flexShrink: 0,
-                      whiteSpace: 'nowrap',
-                      color: tab === t ? '#0f3d91' : '#94a3b8',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {t === "specifications" ? "Technical Specs" : t}
-                    {tab === t && (
-                      <span className="absolute bottom-0 left-0 right-0 h-1 bg-[#0f3d91]" style={{ borderRadius: '2px 2px 0 0' }} />
-                    )}
-                  </button>
+            <div className="pd-thumbnails-strip">
+              <div className="pd-thumbnails-scroll">
+                {images.map((img, i) => (
+                  <div key={i} className={`thumb-box ${i === activeImageIndex ? 'active' : ''}`} onClick={() => setActiveImageIndex(i)}>
+                    <img src={optimizeCloudinaryUrl(img, 200)} alt={`${product.title} view ${i + 1}`} />
+                  </div>
                 ))}
               </div>
             </div>
+          </div>
 
-            {/* Tab body */}
-            <div className="p-6 sm:p-10 lg:p-14 min-h-72">
-
-              {/* OVERVIEW - MINIMALIST SHOWROOM */}
-              {tab === 'overview' && (
-                <div className="max-w-4xl animate-fadeIn" style={{ maxWidth: '900px', margin: '0 auto' }}>
-                   <div style={{ padding: '20px 25px' }}>
-                     <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#000000', marginBottom: '32px', letterSpacing: '-0.02em' }}>About this product</h2>
-                     
-                     <div style={{ marginBottom: '40px' }}>
-                        <div 
-                          className="product-overview-content"
-                          dangerouslySetInnerHTML={{ __html: product.overview || product.description || 'Information for this product is currently being updated.' }}
-                          style={{ fontSize: '16px', color: '#4b5563', lineHeight: 1.7, fontWeight: '500' }}
-                        />
-                     </div>
-
-                     {product.shortSpecification && (
-                        <div className="feature-list" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                            <div 
-                              className="short-specs-content"
-                              dangerouslySetInnerHTML={{ __html: product.shortSpecification }}
-                              style={{ fontSize: '16px', lineHeight: 1.6, color: '#4b5563', fontWeight: '500' }}
-                            />
-                        </div>
-                     )}
-                   </div>
-                </div>
-              )}
-
-              {/* SPECIFICATIONS */}
-              {tab === 'specifications' && (
-                <div className="max-w-5xl animate-fadeIn">
-                  <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#1e293b', marginBottom: '32px', textTransform: 'uppercase' }}>Technical <span style={{ color: '#0f3d91' }}>Manifest</span></h2>
-                  
-                  {product.technicalSpecification ? (
-                    <div 
-                      className="technical-specs-content"
-                      dangerouslySetInnerHTML={{ __html: product.technicalSpecification }}
-                      style={{ fontSize: '15px', color: '#4b5563', lineHeight: 1.7 }}
-                    />
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {[
-                          { l: "Manufacturer Brand", v: product.brand },
-                          { l: "Asset Category", v: product.category?.name || product.category },
-                          { l: "Product Model", v: product.title || product.name },
-                          { l: "Color", v: product.color },
-                          { l: "Dimensions (W x H x D)", v: (product.width && product.height && product.depth) ? `${product.width} x ${product.height} x ${product.depth}` : null },
-                          { l: "Screen Size", v: product.screenSize },
-                          { l: "Availability", v: product.countInStock > 0 ? "In Stock" : "Out of Stock" },
-                          { l: "Verification Status", v: "Official Record" },
-                          { l: "Platform Compatibility", v: "Universal Wireless" },
-                          { l: "Operational Lifecycle", v: "Professional Grade" },
-                          { l: "Data Connectivity", v: "Cloud-Enabled" },
-                        ].filter(r => r.v).map((row, i) => (
-                          <div key={i} style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#ffffff' : '#fcfdfe' }}>
-                              <div style={{ padding: '20px 32px', width: '35%', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em', background: '#f8fafc' }}>{row.l}</div>
-                              <div style={{ padding: '20px 32px', flex: 1, fontSize: '15px', fontWeight: '700', color: '#1e293b' }}>{row.v}</div>
-                          </div>
-                        ))}
+          <div className="pd-content">
+            <div className="tag-group">
+                <span className="badge-tag brand-tag">{product.brand}</span>
+                <span className="badge-tag category-tag">{product.category?.name || product.category || 'All-in-One'}</span>
+            </div>
+            <h1 className="pd-title-main">{product.title || product.name}</h1>
+            <h2 className="pd-price-main">${product.price?.toFixed(2)}</h2>
+            <div className="attr-badge-group">
+                {product.technology && product.technology.length > 0 && (
+                    <div className="mini-attr">
+                        <span className="mini-label">Technology:</span>
+                        <span className="mini-val">{Array.isArray(product.technology) ? product.technology[0] : product.technology}</span>
                     </div>
-                  )}
+                )}
+                {product.usageCategory && product.usageCategory.length > 0 && (
+                    <div className="mini-attr">
+                        <span className="mini-label">Use:</span>
+                        <span className="mini-val">{Array.isArray(product.usageCategory) ? product.usageCategory[0] : product.usageCategory}</span>
+                    </div>
+                )}
+            </div>
+            {product.countInStock > 0 && (
+                <div className="qty-picker-row">
+                    <span className="qty-title">Quantity</span>
+                    <div className="qty-flex">
+                        <div className="qty-stepper">
+                            <button onClick={() => setQty(Math.max(1, qty - 1))} disabled={qty <= 1}>−</button>
+                            <input type="text" readOnly value={qty} />
+                            <button onClick={() => setQty(Math.min(product.countInStock, qty + 1))} disabled={qty >= product.countInStock}>+</button>
+                        </div>
+                        <span className="qty-avail">{product.countInStock} available</span>
+                    </div>
                 </div>
-              )}
-
-              {/* REVIEWS - EXECUTIVE FEEDBACK SHOWCASE */}
-              {tab === 'reviews' && (
-                <div className="max-w-3xl mx-auto animate-fadeIn" style={{ maxWidth: '800px', margin: '0 auto', overflowX: 'hidden' }}>
-
-                   {/* REVIEW WORKSTATION - THE INPUT HUB */}
-                   <div style={{ marginBottom: '100px', padding: '48px', background: '#fcfdfe', borderRadius: '40px', border: '1px solid #f1f5f9' }}>
-                      <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#000000', marginBottom: '12px', letterSpacing: '-0.02em' }}>Review <span style={{ color: '#0f3d91' }}>Workstation</span></h2>
-                      <p style={{ fontSize: '14px', color: '#64748b', fontWeight: '500', marginBottom: '40px' }}>Register your official performance assessment for this asset.</p>
-
-                      {!userInfo ? (
-                        <div style={{ textAlign: 'center', padding: '60px 0', border: '1px dashed #e2e8f0', borderRadius: '32px' }}>
-                           <p style={{ fontSize: '15px', fontWeight: '600', color: '#64748b', marginBottom: '24px' }}>Please authenticate to access the workstation.</p>
-                           <Link href="/signin" style={{ display: 'inline-block', padding: '16px 32px', background: '#000000', color: '#ffffff', borderRadius: '16px', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', textDecoration: 'none' }}>Sign In</Link>
-                        </div>
-                      ) : !canReview ? (
-                        <div style={{ padding: '60px 40px', background: '#fff7ed', borderRadius: '32px', border: '1px solid #ffedd5', textAlign: 'center' }}>
-                           <div style={{ width: '56px', height: '56px', background: '#fb923c', borderRadius: '100px', display: 'flex', alignItems: 'center', justify_content: 'center', margin: '0 auto 24px', color: '#ffffff', fontSize: '24px' }}>⚠️</div>
-                           <h4 style={{ fontSize: '18px', fontWeight: '900', color: '#9a3412', marginBottom: '12px' }}>Verified Purchase Required</h4>
-                           <p style={{ fontSize: '15px', color: '#c2410c', fontWeight: '500', lineHeight: 1.6, marginBottom: '32px' }}>
-                              This workstation is reserved exclusively for verified owners. <br />
-                              Please purchase and receive this asset to register your performance assessment.
-                           </p>
-                           <button onClick={handleAddToCart} style={{ display: 'inline-block', padding: '16px 32px', background: '#9a3412', color: '#ffffff', borderRadius: '16px', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', border: 'none', cursor: 'pointer' }}>Add to Cart Now</button>
-                        </div>
-                      ) : (
-                        <form onSubmit={submitReviewHandler} style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <label style={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.2em' }}>Quality Verification Rating</label>
-                            <div style={{ display: 'flex', gap: '16px' }}>
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                  type="button"
-                                  key={star}
-                                  onClick={() => setRating(star)}
-                                  style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    padding: 0,
-                                    fontSize: '36px',
-                                    color: rating >= star ? '#fbbf24' : '#e2e8f0',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    transform: rating >= star ? 'scale(1.1)' : 'scale(1)'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.25)'}
-                                  onMouseLeave={(e) => e.currentTarget.style.transform = rating >= star ? 'scale(1.1)' : 'scale(1)'}
-                                >
-                                  ★
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <label style={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.2em' }}>Technical Feedback</label>
-                            <textarea
-                              rows="6"
-                              value={comment}
-                              onChange={(e) => setComment(e.target.value)}
-                              placeholder="Describe your operational experience with this asset..."
-                              style={{
-                                width: '100%',
-                                padding: '24px',
-                                background: '#ffffff',
-                                border: '1.5px solid #e2e8f0',
-                                borderRadius: '24px',
-                                fontSize: '16px',
-                                fontWeight: '500',
-                                color: '#000000',
-                                outline: 'none',
-                                resize: 'none',
-                                lineHeight: 1.6,
-                                transition: 'all 0.3s ease'
-                              }}
-                              onFocus={(e) => {
-                                e.target.style.borderColor = '#0f3d91';
-                                e.target.style.boxShadow = '0 10px 30px -10px rgba(15, 61, 145, 0.1)';
-                              }}
-                              onBlur={(e) => {
-                                e.target.style.borderColor = '#e2e8f0';
-                                e.target.style.boxShadow = 'none';
-                              }}
-                            />
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={rating === 0 || !comment.trim()}
-                            style={{
-                               width: '100%',
-                               height: '72px',
-                               background: '#0f3d91',
-                               color: '#ffffff',
-                               borderRadius: '24px',
-                               fontSize: '14px',
-                               fontWeight: '900',
-                               textTransform: 'uppercase',
-                               letterSpacing: '0.15em',
-                               cursor: 'pointer',
-                               border: 'none',
-                               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                               opacity: (rating === 0 || !comment.trim()) ? 0.4 : 1,
-                               boxShadow: '0 12px 30px -10px rgba(15, 61, 145, 0.4)'
-                            }}
-                          >
-                            Submit Official Review
-                          </button>
-                        </form>
-                      )}
-                   </div>
-
-                   {/* CLIENT FEEDBACK LOG */}
-                   <div style={{ padding: '0 20px' }}>
-                      <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#000000', marginBottom: '48px', letterSpacing: '-0.02em' }}>Client <span style={{ color: '#0f3d91' }}>Feedback</span></h2>
-
-                      {!product.reviews?.length ? (
-                        <div style={{ padding: '80px 0', textAlign: 'center' }}>
-                           <p style={{ fontSize: '16px', fontWeight: '600', color: '#94a3b8' }}>No certified feedback has been registered for this asset yet.</p>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          {product.reviews.map((rev) => (
-                            <div key={rev._id} style={{ padding: '48px 0', borderBottom: '1px solid #f1f5f9' }}>
-                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                     <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#0f3d91', display: 'flex', alignItems: 'center', justify_content: 'center', fontSize: '14px', fontWeight: '900' }}>{rev.name?.charAt(0)?.toUpperCase()}</div>
-                                     <div>
-                                        <p style={{ fontSize: '15px', fontWeight: '900', color: '#000000', margin: 0 }}>{rev.name}</p>
-                                        <p style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', margin: 0 }}>{rev.createdAt?.substring(0, 10)}</p>
-                                     </div>
-                                  </div>
-                                  <div style={{ color: '#fbbf24', fontSize: '12px', letterSpacing: '1px' }}>{"★".repeat(rev.rating)}</div>
-                               </div>
-                               <p style={{ fontSize: '16px', color: '#4b5563', lineHeight: 1.8, fontWeight: '500', margin: 0 }}>{rev.comment}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                   </div>
-
+            )}
+            <div className="action-button-grid">
+                <button className="action-btn btn-cart-black" onClick={handleAddToCart} disabled={product.countInStock === 0}>
+                    <ShoppingCart size={16} strokeWidth={2.5} /> Add to Cart
+                </button>
+                <button className="action-btn btn-buy-blue" onClick={buyNowHandler} disabled={product.countInStock === 0}>
+                    <CreditCard size={16} strokeWidth={2.5} /> Buy Now
+                </button>
+            </div>
+            <div className="trust-grid-simple">
+                <div className="trust-cell">
+                    <div className="trust-icon-blue"><ShoppingCart size={20} /></div>
+                    <div className="trust-info"><span className="trust-head">Free Shipping</span><span className="trust-desc">Orders over $249</span></div>
                 </div>
-              )}
-
+                <div className="trust-cell">
+                    <div className="trust-icon-blue"><ChevronLeft size={20} /></div>
+                    <div className="trust-info"><span className="trust-head">Easy Returns</span><span className="trust-desc">30-day window</span></div>
+                </div>
+                <div className="trust-cell">
+                    <div className="trust-icon-blue"><Lock size={20} /></div>
+                    <div className="trust-info"><span className="trust-head">Warranty</span><span className="trust-desc">Manufacturer covered</span></div>
+                </div>
+                <div className="trust-cell">
+                    <div className="trust-icon-blue"><ShoppingCart size={20} /></div>
+                    <div className="trust-info"><span className="trust-head">Authentic</span><span className="trust-desc">Product authorized</span></div>
+                </div>
             </div>
           </div>
         </div>
 
-      {/* RELATED PRODUCTS - EXECUTIVE GRID */}
-      {relatedProducts && relatedProducts.length > 0 && (
-         <div className="related-section" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '48px' }}>
-                 <div>
-                    <span style={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.25em', display: 'block', marginBottom: '12px' }}>Curation Hub</span>
-                    <h2 style={{ fontSize: '36px', fontWeight: '900', color: '#1e293b', margin: 0, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>You Might <span style={{ color: '#0f3d91' }}>Also Like</span></h2>
-                 </div>
-                 <Link href="/printers" style={{ fontSize: '13px', fontWeight: '900', color: '#0f3d91', textDecoration: 'none', textTransform: 'uppercase', borderBottom: '2px solid #0f3d91', paddingBottom: '4px' }}>Explore Full Registry</Link>
-              </div>
-              
-              <div className="related-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '32px' }}>
-                 {relatedProducts.filter(p => p._id !== product._id).slice(0, 4).map(p => (
-                    <Link href={`/product/${p.slug || p._id}`} key={p._id} className="related-exec-card" onClick={() => window.scrollTo(0,0)}>
-                        <div style={{ height: '280px', background: '#ffffff', borderRadius: '32px', padding: '32px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justify_content: 'center', transition: 'all 0.3s ease' }} className="related-img-host">
-                             <img src={optimizeCloudinaryUrl(p.image || (p.images && p.images[0]), 400)} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'multiply' }} />
+        <div className="pd-tabs-wrapper">
+            <div className="tabs-header">
+                {['overview', 'specifications', 'reviews'].map((t) => (
+                    <button key={t} className={`tab-trigger ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>{t}</button>
+                ))}
+            </div>
+            <div className="tab-content-container">
+                {tab === 'overview' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                        <div className="product-overview-content" dangerouslySetInnerHTML={{ __html: product.overview || product.description || 'Updating...' }} style={{ fontSize: '15px', color: '#4b5563', lineHeight: 1.8 }} />
+                        {product.shortDetails && (
+                            <div><h3 style={{ fontSize: '18px', fontWeight: '800', color: '#111827', marginBottom: '20px' }}>Features</h3>
+                            <div className="highlights-content" dangerouslySetInnerHTML={{ __html: product.shortDetails }} style={{ fontSize: '15px', lineHeight: 1.7, color: '#4b5563' }} /></div>
+                        )}
+                    </div>
+                )}
+                {tab === 'specifications' && (
+                    <div style={{ maxWidth: '1000px' }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#111827', marginBottom: '32px' }}>Specifications</h2>
+                        {(() => {
+                            try {
+                                const parsedSpecs = JSON.parse(product.technicalSpecification);
+                                if (Array.isArray(parsedSpecs)) {
+                                    return (
+                                        <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid #f1f5f9' }}>
+                                            {parsedSpecs.map((row, i) => (
+                                                <div key={i} style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', minHeight: '64px' }}>
+                                                    <div style={{ width: '35%', padding: '20px 32px', background: '#f8fafc', fontSize: '11px', fontWeight: '900', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>{row.name || row.key}</div>
+                                                    <div style={{ flex: 1, padding: '20px 32px', fontSize: '14px', fontWeight: '600', color: '#1e293b', lineHeight: 1.6, display: 'flex', alignItems: 'center', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{row.value}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                }
+                            } catch (e) {
+                                return <div className="technical-specs-content" dangerouslySetInnerHTML={{ __html: product.technicalSpecification }} style={{ fontSize: '15px', color: '#4b5563', lineHeight: 1.8 }} />;
+                            }
+                        })()}
+                    </div>
+                )}
+                {tab === 'reviews' && (
+                    <div style={{ maxWidth: '800px' }}>
+                        <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#111827', marginBottom: '32px' }}>Reviews</h3>
+                        <button onClick={handleReviewClick} style={{ padding: '16px 32px', background: '#0f3d91', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', cursor: 'pointer' }}>Write a Review</button>
+                        <div style={{ marginTop: '40px' }}>
+                            {product.reviews?.length > 0 ? product.reviews.map((rev) => (
+                                <div key={rev._id} style={{ padding: '32px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <span style={{ fontWeight: '800', fontSize: '15px' }}>{rev.name}</span>
+                                        <span style={{ color: '#9ca3af', fontSize: '12px' }}>{rev.createdAt?.substring(0, 10)}</span>
+                                    </div>
+                                    <div style={{ color: '#fbbf24', fontSize: '14px', marginBottom: '12px' }}>{"★".repeat(rev.rating)}</div>
+                                    <p style={{ color: '#4b5563', fontSize: '15px', lineHeight: 1.7 }}>{rev.comment}</p>
+                                </div>
+                            )) : <p style={{ color: '#6b7280' }}>No reviews yet.</p>}
                         </div>
-                        <div style={{ padding: '24px 8px' }}>
-                            <h4 style={{ fontSize: '16px', fontWeight: '900', color: '#1e293b', marginBottom: '12px', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</h4>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: '18px', fontWeight: '900', color: '#0f3d91' }}>${p.price?.toFixed(2)}</span>
-                                <span style={{ fontSize: '10px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>View Asset</span>
-                            </div>
-                        </div>
-                    </Link>
-                 ))}
-              </div>
-           </div>
-        )}
+                    </div>
+                )}
+            </div>
+        </div>
 
-        <style>{`
-          .pd-wrapper { padding: 40px 0 0; background: #fff; }
-          .pd-layout { display: grid; grid-template-columns: 100px 1fr 450px; gap: 60px; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-          .pd-thumbs { display: flex; flex-direction: column; gap: 20px; }
-          .pd-thumbs img { width: 100px; height: 100px; object-fit: contain; border-radius: 20px; border: 2px solid #f8fafc; cursor: pointer; padding: 12px; background: #fff; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-          .pd-thumbs img.active { border-color: #0f3d91; box-shadow: 0 10px 25px -5px rgba(15, 61, 145, 0.15); transform: scale(1.05); }
-          .pd-image-wrapper { background: #ffffff; border-radius: 64px; border: 1px solid #f1f5f9; height: 720px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 20px -10px rgba(0,0,0,0.05); }
-          .pd-image-wrapper img { width: 85%; height: 85%; object-fit: contain; mix-blend-mode: multiply; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-          .pd-info { padding: 10px 0; display: flex; flex-direction: column; }
-          .pd-info .brand { font-size: 11px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.35em; display: block; margin-bottom: 20px; }
-          .pd-info h1 { font-size: 44px; font-weight: 900; color: #1e293b; margin-bottom: 24px; letter-spacing: -0.03em; line-height: 1.1; }
-          .rating-summary { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid #f1f5f9; }
-          .price-section { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 48px; }
-          .price-section .price { font-size: 56px; font-weight: 900; color: #0f3d91; letter-spacing: -0.025em; line-height: 1; }
-          .price-section .stock-status { font-size: 11px; font-weight: 900; text-transform: uppercase; padding: 10px 18px; border-radius: 12px; letter-spacing: 0.05em; margin-bottom: 12px; }
-          .in-stock { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
-          .key-specs { margin-bottom: 48px; padding: 40px; background: #fcfdfe; border-radius: 32px; border: 1px solid #f1f5f9; border-top: 4px solid #0f3d91; }
-          .key-specs h4 { font-size: 12px; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; }
-          .qty-picker { margin-bottom: 56px; display: flex; align-items: center; gap: 40px; }
-          .qty-label { font-size: 12px; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: 0.15em; }
-          .qty-controls { display: flex; align-items: center; background: #f8fafc; border-radius: 20px; padding: 8px; border: 1px solid #f1f5f9; }
-          .qty-controls button { width: 48px; height: 48px; border-radius: 14px; border: none; background: #fff; font-size: 20px; font-weight: 900; cursor: pointer; color: #1e293b; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: all 0.2s; }
-          .qty-controls input { width: 60px; text-align: center; background: transparent; border: none; font-size: 18px; font-weight: 900; color: #0f3d91; outline: none; }
-          .actions { display: flex; gap: 24px; margin-top: auto; }
-          .actions button { flex: 1; height: 76px; border-radius: 24px; font-size: 14px; font-weight: 900; text-transform: uppercase; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 14px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); letter-spacing: 0.12em; }
-          .btn-cart { background: #ffffff; border: 3.5px solid #0f3d91 !important; color: #0f3d91; }
-          .btn-buy { background: #0f3d91; color: #ffffff; box-shadow: 0 15px 35px -10px rgba(15, 61, 145, 0.45); }
-          .btn-buy:hover { background: #0a2a66; transform: translateY(-5px); box-shadow: 0 25px 50px -10px rgba(15, 61, 145, 0.55); }
-          .btn-cart:hover { background: #f0f7ff; transform: translateY(-5px); }
-          .tabs-container { margin-top: 120px !important; }
-          .related-section { margin-top: 120px !important; padding-bottom: 120px; }
-          @media (max-width: 1024px) {
-            .pd-layout { grid-template-columns: 1fr; gap: 64px; }
-            .pd-thumbs { flex-direction: row; order: 2; overflow-x: auto; padding-bottom: 12px; gap: 16px; }
-            .pd-image-wrapper { height: 550px; order: 1; border-radius: 48px; }
-            .pd-info { order: 3; }
-            .actions { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 24px; z-index: 100; border-top: 1px solid #f1f5f9; box-shadow: 0 -15px 50px rgba(0,0,0,0.08); margin: 0; border-radius: 40px 40px 0 0; }
-            .pd-wrapper { padding-bottom: 140px; }
-          }
-          @media (max-width: 600px) {
-            .pd-info h1 { font-size: 28px; }
-            .price-section .price { font-size: 40px; }
-            .pd-image-wrapper { height: 400px; }
-            .pd-layout { padding: 0 20px; }
-            .tabs-container, .related-section { padding: 0 20px; }
-          }
-        `}</style>
+        {relatedProducts && relatedProducts.length > 0 && (
+            <div style={{ maxWidth: '1300px', margin: '80px auto 0', padding: '0 40px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#111827', marginBottom: '40px' }}>You Might Also Like</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '32px' }}>
+                    {relatedProducts.filter(p => p._id !== product._id).slice(0, 4).map(p => (
+                        <Link href={`/product/${p.slug || p._id}`} key={p._id} style={{ textDecoration: 'none', color: 'inherit' }}>
+                            <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '12px', padding: '24px', textAlign: 'center' }}>
+                                <div style={{ height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                                    <img src={optimizeCloudinaryUrl(p.image || (p.images && p.images[0]), 300)} alt={p.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                                </div>
+                                <h4 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '10px', height: '40px', overflow: 'hidden' }}>{p.name}</h4>
+                                <p style={{ fontSize: '16px', fontWeight: '900', color: '#0f3d91' }}>${p.price?.toFixed(2)}</p>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+        )}
       </div>
     </>
   );

@@ -35,7 +35,8 @@ export const listProducts = (search = '', category = '', pageNumber = 1, brand =
         const categoryParam = encodeURIComponent(category);
         const brandParam = encodeURIComponent(brand);
         
-        let url = `${process.env.NEXT_PUBLIC_API_URL}/products?search=${searchParam}&category=${categoryParam}&page=${pageNumber}`;
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        let url = `${baseUrl}/products?search=${searchParam}&category=${categoryParam}&page=${pageNumber}`;
         if (brand && brand !== 'all') {
             url += `&brand=${brandParam}`;
         }
@@ -61,7 +62,8 @@ export const listProductDetails = (id) => async (dispatch) => {
     try {
         dispatch({ type: PRODUCT_DETAILS_REQUEST });
 
-        const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        const { data } = await axios.get(`${baseUrl}/products/${id}`);
 
         dispatch({
             type: PRODUCT_DETAILS_SUCCESS,
@@ -90,7 +92,8 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
             },
         };
 
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`, config);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        await axios.delete(`${baseUrl}/products/${id}`, config);
 
         dispatch({ type: PRODUCT_DELETE_SUCCESS });
     } catch (error) {
@@ -117,7 +120,8 @@ export const createProduct = (productData) => async (dispatch, getState) => {
             },
         };
 
-        const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/products`, productData, config);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        const { data } = await axios.post(`${baseUrl}/products`, productData, config);
 
         dispatch({
             type: PRODUCT_CREATE_SUCCESS,
@@ -146,8 +150,9 @@ export const updateProduct = (id, productData) => async (dispatch, getState) => 
             },
         };
 
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
         const { data } = await axios.put(
-            `${process.env.NEXT_PUBLIC_API_URL}/products/${id}`,
+            `${baseUrl}/products/${id}`,
             productData,
             config
         );
@@ -183,7 +188,8 @@ export const createProductReview = (productId, review) => async (dispatch, getSt
             },
         };
 
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}/reviews`, review, config);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        await axios.post(`${baseUrl}/products/${productId}/reviews`, review, config);
 
         dispatch({
             type: PRODUCT_CREATE_REVIEW_SUCCESS,
@@ -214,7 +220,8 @@ export const updateProductReview = (productId, review) => async (dispatch, getSt
             },
         };
 
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}/reviews`, review, config);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        await axios.put(`${baseUrl}/products/${productId}/reviews`, review, config);
 
         dispatch({
             type: PRODUCT_UPDATE_REVIEW_SUCCESS,
@@ -244,7 +251,8 @@ export const deleteProductReview = (productId) => async (dispatch, getState) => 
             },
         };
 
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}/reviews`, config);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        await axios.delete(`${baseUrl}/products/${productId}/reviews`, config);
 
         dispatch({
             type: PRODUCT_DELETE_REVIEW_SUCCESS,

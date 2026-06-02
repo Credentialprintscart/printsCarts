@@ -1,7 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { BarChart3, TrendingUp, Users, DollarSign, ArrowUp, ArrowDown, AlertCircle } from 'lucide-react';
+import { 
+    BarChart3, TrendingUp, Users, DollarSign, 
+    ArrowUpRight, AlertCircle, Calendar,
+    Activity
+} from 'lucide-react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -13,9 +17,10 @@ import {
     Tooltip,
     Legend,
     ArcElement,
+    Filler
 } from 'chart.js';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
-import { fetchAnalytics } from '../../../redux/actions/analyticsActions';
+import { fetchAnalytics } from '@/redux/actions/analyticsActions';
 
 ChartJS.register(
     CategoryScale,
@@ -26,12 +31,12 @@ ChartJS.register(
     Title,
     Tooltip,
     Legend,
-    ArcElement
+    ArcElement,
+    Filler
 );
 
 const AdminAnalytics = () => {
     const dispatch = useDispatch();
-    // Use a more defensive selector to avoid property-from-undefined errors in high-perf renders
     const analyticsState = useSelector((state) => state.analytics || {});
     const { analytics, loading, error } = analyticsState;
 
@@ -39,7 +44,6 @@ const AdminAnalytics = () => {
         dispatch(fetchAnalytics());
     }, [dispatch]);
 
-    // Format currency
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
@@ -47,18 +51,16 @@ const AdminAnalytics = () => {
         }).format(amount);
     };
 
-    // Format percentage
     const formatPercentage = (value) => {
         return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
     };
 
-    // Prepare chart data
     const prepareRevenueChartData = () => {
         if (!analytics?.revenueByMonth) return null;
 
         const months = analytics.revenueByMonth.map(item => {
             const date = new Date(item._id.year, item._id.month - 1);
-            return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            return date.toLocaleDateString('en-US', { month: 'short' });
         });
 
         return {
@@ -67,7 +69,7 @@ const AdminAnalytics = () => {
                 {
                     label: 'Revenue',
                     data: analytics.revenueByMonth.map(item => item.revenue),
-                    borderColor: 'rgb(59, 130, 246)',
+                    borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     borderWidth: 2,
                     fill: true,
@@ -76,7 +78,7 @@ const AdminAnalytics = () => {
                 {
                     label: 'Orders',
                     data: analytics.revenueByMonth.map(item => item.orders),
-                    borderColor: 'rgb(16, 185, 129)',
+                    borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     borderWidth: 2,
                     fill: true,
@@ -180,199 +182,87 @@ const AdminAnalytics = () => {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div>
-                <h1 className="text-2xl font-bold text-slate-900">Analytics</h1>
-                <p className="text-slate-500">Overview of your store's performance.</p>
+        <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">Analytics</h1>
+                    <p className="text-slate-500">Overview of your store's performance metrics.</p>
+                </div>
+                <button 
+                    onClick={() => dispatch(fetchAnalytics())}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 text-sm font-medium shadow-sm transition-colors"
+                >
+                    <Activity size={16} className="text-blue-600" />
+                    Refresh Data
+                </button>
             </div>
 
             {/* Error State */}
             {error && (
-                <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl flex items-center gap-3 font-bold animate-shake">
+                <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-center gap-3 font-bold animate-shake">
                     <AlertCircle size={20} />
                     {error}
                 </div>
             )}
 
-            {/* Loading State */}
-            {loading && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm animate-pulse">
-                            <div className="flex items-start justify-between">
-                                <div className="space-y-2">
-                                    <div className="h-4 bg-slate-200 rounded w-24"></div>
-                                    <div className="h-8 bg-slate-200 rounded w-20"></div>
-                                    <div className="h-3 bg-slate-200 rounded w-16"></div>
-                                </div>
-                                <div className="h-12 w-12 bg-slate-200 rounded-lg"></div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Stats Cards */}
-            {!loading && analytics && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[
-                        {
-                            label: 'Total Revenue',
-                            value: formatCurrency(analytics.revenue?.total || 0),
-                            change: formatPercentage(analytics.revenue?.growth || 0),
-                            icon: DollarSign,
-                            color: 'text-green-600',
-                            bg: 'bg-green-100'
-                        },
-                        {
-                            label: 'Total Orders',
-                            value: analytics.orders?.total || 0,
-                            change: formatPercentage(analytics.orders?.growth || 0),
-                            icon: BarChart3,
-                            color: 'text-blue-600',
-                            bg: 'bg-blue-100'
-                        },
-                        {
-                            label: 'Active Customers',
-                            value: analytics.customers?.total || 0,
-                            change: formatPercentage(analytics.customers?.growth || 0),
-                            icon: Users,
-                            color: 'text-purple-600',
-                            bg: 'bg-purple-100'
-                        },
-                        {
-                            label: 'Avg. Order Value',
-                            value: analytics.orders?.total > 0
-                                ? formatCurrency((analytics.revenue?.total || 0) / analytics.orders.total)
-                                : formatCurrency(0),
-                            change: '+0.0%',
-                            icon: TrendingUp,
-                            color: 'text-orange-600',
-                            bg: 'bg-orange-100'
-                        }
-                    ].map((stat, i) => (
-                        <div key={i} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
-                            <div>
-                                <p className="text-slate-500 text-sm font-medium mb-1">{stat.label}</p>
-                                <h3 className="text-2xl font-bold text-slate-900">{stat.value}</h3>
-                                <div className="flex items-center gap-1 mt-2 text-xs font-semibold">
-                                    <span className={stat.change.startsWith('+') && stat.change !== '+0.0%' ? 'text-green-600' : 'text-slate-400'}>
-                                        {stat.change}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {loading ? (
+                    [...Array(4)].map((_, i) => (
+                        <div key={i} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm animate-pulse h-32"></div>
+                    ))
+                ) : analytics && (
+                    <>
+                        {[
+                            { label: 'Total Revenue', value: formatCurrency(analytics.revenue?.total || 0), change: formatPercentage(analytics.revenue?.growth || 0), icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+                            { label: 'Total Orders', value: analytics.orders?.total || 0, change: formatPercentage(analytics.orders?.growth || 0), icon: BarChart3, color: 'text-blue-600', bg: 'bg-blue-100' },
+                            { label: 'Active Customers', value: analytics.customers?.total || 0, change: formatPercentage(analytics.customers?.growth || 0), icon: Users, color: 'text-purple-600', bg: 'bg-purple-100' },
+                            { label: 'Avg. Order Value', value: analytics.orders?.total > 0 ? formatCurrency((analytics.revenue?.total || 0) / analytics.orders.total) : formatCurrency(0), change: '+0.0%', icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-100' }
+                        ].map((stat, i) => (
+                            <div key={i} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className={`p-3 rounded-lg ${stat.bg} ${stat.color}`}>
+                                        <stat.icon size={22} />
+                                    </div>
+                                    <span className={`flex items-center text-xs font-bold px-2 py-1 rounded-full ${stat.change.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                                        {stat.change} <ArrowUpRight size={12} className="ml-1" />
                                     </span>
-                                    <span className="text-slate-400">vs last month</span>
                                 </div>
+                                <h3 className="text-3xl font-bold text-slate-900 mb-1">{stat.value}</h3>
+                                <p className="text-slate-500 text-sm font-medium">{stat.label}</p>
                             </div>
-                            <div className={`p-3 rounded-lg ${stat.bg} ${stat.color}`}>
-                                <stat.icon size={20} />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </>
+                )}
+            </div>
 
-            {/* Charts */}
-            {!loading && analytics && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Revenue & Orders Chart */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                <TrendingUp size={20} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-slate-800 uppercase tracking-tighter text-lg">Revenue & Orders Trend</h3>
-                                <p className="text-slate-500 text-sm">Last 6 months performance</p>
-                            </div>
-                        </div>
-                        <div className="h-80">
-                            {prepareRevenueChartData() ? (
-                                <Line data={prepareRevenueChartData()} options={chartOptions} />
-                            ) : (
-                                <div className="h-full flex items-center justify-center text-slate-400">
-                                    No data available
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Orders by Status */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-green-50 text-green-600 rounded-lg">
-                                <BarChart3 size={20} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-slate-800 uppercase tracking-tighter text-lg">Orders by Status</h3>
-                                <p className="text-slate-500 text-sm">Current order distribution</p>
-                            </div>
-                        </div>
-                        <div className="h-80">
-                            {prepareOrdersStatusData() ? (
-                                <Doughnut data={prepareOrdersStatusData()} options={doughnutOptions} />
-                            ) : (
-                                <div className="h-full flex items-center justify-center text-slate-400">
-                                    No data available
-                                </div>
-                            )}
-                        </div>
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="font-bold text-slate-900 mb-6">Revenue & Orders Growth</h3>
+                    <div className="h-80">
+                        {analytics ? (
+                            <Line data={prepareRevenueChartData()} options={chartOptions} />
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-slate-400 italic">No chart data available</div>
+                        )}
                     </div>
                 </div>
-            )}
 
-            {/* Recent Orders Table */}
-            {!loading && analytics?.recentOrders && analytics.recentOrders.length > 0 && (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-slate-200">
-                        <h3 className="font-black text-slate-800 uppercase tracking-tighter text-lg">Recent Orders</h3>
-                        <p className="text-slate-500 text-sm">Latest customer orders</p>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-slate-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Order ID</th>
-                                    <th className="px-6 py-3 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Customer</th>
-                                    <th className="px-6 py-3 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Amount</th>
-                                    <th className="px-6 py-3 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200">
-                                {analytics.recentOrders.slice(0, 5).map((order) => (
-                                    <tr key={order._id} className="hover:bg-slate-50/50">
-                                        <td className="px-6 py-4 font-bold text-slate-700">
-                                            ORD-{order._id.toUpperCase().slice(-8)}
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-700">
-                                            {order.user?.name || 'N/A'}
-                                        </td>
-                                        <td className="px-6 py-4 font-bold text-green-600">
-                                            {formatCurrency(order.totalPrice)}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs font-bold rounded-full ${
-                                                order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                                                order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
-                                                order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
-                                                order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
-                                                'bg-gray-100 text-gray-800'
-                                            }`}>
-                                                {order.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-500 text-sm">
-                                            {new Date(order.createdAt).toLocaleDateString()}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="font-bold text-slate-900 mb-6">Order Status Distribution</h3>
+                    <div className="h-80">
+                        {analytics ? (
+                            <Doughnut data={prepareOrdersStatusData()} options={doughnutOptions} />
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-slate-400 italic">No status data available</div>
+                        )}
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 };
 
 export default AdminAnalytics;
-

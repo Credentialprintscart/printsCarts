@@ -1,8 +1,12 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@source "../**/*.{js,jsx,ts,tsx}";
 
 @theme {
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
+  --color-primary: #024ad8;
+  --color-active-blue: #0133a1;
+  --color-secondary: #1e5bb8;
   --color-background: var(--bg);
   --color-card: var(--card);
   --color-text: var(--text);
@@ -10,9 +14,9 @@
 }
 
 :root {
-  /* Brand Colors */
-  --primary: #0f3d91;
-  --primary-foreground: #ffffff;
+  /* Brand Colors from IDG */
+  --primary: #024ad8;
+  --active-blue: #0133a1;
   
   --secondary: #1e5bb8;
   --secondary-foreground: #ffffff;
@@ -30,24 +34,29 @@
   --warning: #f59e0b;
   --info: #3b82f6;
 
-  /* Fonts */
-  --font-heading: 'Poppins', system-ui, sans-serif;
-  --font-body: 'Poppins', system-ui, sans-serif;
+  /* Fonts - Using GDSherpa patterns if available, else standard sans */
+  --font-heading: "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Helvetica Neue", Arial, sans-serif;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* GoDaddy Font Link from IDG */
+@font-face {
+  font-family: 'GDSherpa';
+  src: url('https://img6.wsimg.com/ux-assets/@ux/fonts/4.5.0/GDSherpa-vf4.woff2') format('woff2');
+  font-display: swap;
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'GDSherpa', "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #333;
   line-height: 1.6;
   background: #fff;
+}
+
+main {
+  padding-top: 72px; /* Navbar height offset */
 }
 
 #root {
@@ -73,6 +82,12 @@ html[data-scroll-behavior="smooth"] {
   scroll-behavior: smooth;
 }
 
+/* Admin Login Layout */
+.admin-login-wrapper {
+    min-height: 100vh;
+    width: 100%;
+}
+
 /* Admin Dashboard Layout */
 .admin-dashboard-layout {
     display: flex;
@@ -85,24 +100,45 @@ html[data-scroll-behavior="smooth"] {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    max-height: 100vh;
+    overflow-y: auto;
+    background-color: #f8fafc;
 }
 
 .admin-header {
-    height: 64px;
-    background: #fff;
-    border-bottom: 1px solid #e2e8f0;
+    height: 80px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
+    padding: 0 40px;
     position: sticky;
     top: 0;
     z-index: 50;
 }
 
 .admin-content-area {
-    padding: 24px;
+    padding: 30px;
     flex: 1;
+    background: #f8fafc;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #334155;
 }
 
 .mobile-overlay {

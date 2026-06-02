@@ -23,7 +23,8 @@ export const addToCart = (idOrSlug, qty) => async (dispatch, getState) => {
         return;
     }
 
-    const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products/${idOrSlug}`);
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+    const { data } = await axios.get(`${baseUrl}/products/${idOrSlug}`);
 
     dispatch({
         type: CART_ADD_ITEM,

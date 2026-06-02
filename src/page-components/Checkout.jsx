@@ -86,7 +86,8 @@ const Checkout = () => {
         setShippingRates([]);
         setSelectedRate(null);
         try {
-            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/shipping/rates`, { shippingAddress: { address, city, state: province, postalCode, country, phone }, cartItems }, { headers: { Authorization: `Bearer ${userInfo.token}` } });
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+            const { data } = await axios.post(`${apiUrl}/shipping/rates`, { shippingAddress: { address, city, state: province, postalCode, country, phone }, cartItems }, { headers: { Authorization: `Bearer ${userInfo.token}` } });
             const allowedAccounts = ['ca_e3cbd16a6eb84914985d90875a6ec074', 'ca_76d0939dc1ce4c99870bbc2844d8d02b', 'ca_c5f03a14c10d4fbab837e8a35b01c7df', 'ca_b82a2962176446d09a48bc649977f467', 'ca_fb3ad562209b4e7d930bd0f31f44f2fe'];
             const filteredRates = Array.isArray(data) ? data.filter(rate => allowedAccounts.includes(rate.carrier_account_id)) : [];
             setShippingRates(filteredRates);
@@ -112,8 +113,9 @@ const Checkout = () => {
             const result = await clover.createToken();
             if (result.errors) { alert('Fiscal Error: ' + Object.values(result.errors).join(', ')); setLoading(false); return; }
             const orderData = { orderItems: cartItems, shippingAddress: { address, city, state: province, postalCode, country, phone }, paymentMethod: 'Clover', itemsPrice: subtotal, taxPrice, shippingPrice, totalPrice };
-            const { data: createdOrder } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/orders`, orderData, { headers: { Authorization: `Bearer ${userInfo.token}` } });
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/orders/clover/pay`, { amount: totalPrice, orderId: createdOrder._id, source: result.token }, { headers: { Authorization: `Bearer ${userInfo.token}` } });
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+            const { data: createdOrder } = await axios.post(`${apiUrl}/orders`, orderData, { headers: { Authorization: `Bearer ${userInfo.token}` } });
+            await axios.post(`${apiUrl}/orders/clover/pay`, { amount: totalPrice, orderId: createdOrder._id, source: result.token }, { headers: { Authorization: `Bearer ${userInfo.token}` } });
             router.push('/orders');
         } catch (error) { alert('Transaction failed.'); }
         finally { setLoading(false); }
@@ -132,7 +134,7 @@ const Checkout = () => {
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '32px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <div style={{ width: '32px', height: '32px', background: step >= 1 ? '#0f3d91' : '#f1f5f9', color: step >= 1 ? '#fff' : '#94a3b8', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '900' }}>1</div>
-                                <span style={{ fontSize: '11px', fontWeight: '900', color: step >= 1 ? '#1e293b' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Logistics</span>
+                                <span style={{ fontSize: '11px', fontWeight: '900', color: step >= 1 ? '#1e293b' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Shipping</span>
                             </div>
                             <div style={{ width: '40px', height: '2px', background: '#f1f5f9' }}></div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -142,22 +144,22 @@ const Checkout = () => {
                         </div>
                     </div>
 
-                    {/* Step 1: Logistics */}
+                    {/* Step 1: Shipping */}
                     {step === 1 && (
                         <div style={{ background: '#ffffff', borderRadius: '40px', border: '1px solid #f1f5f9', padding: '60px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.03)' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: '900', color: '#1e293b', marginBottom: '40px', textTransform: 'uppercase', textAlign: 'center' }}>Shipment Identification</h2>
+                            <h2 style={{ fontSize: '20px', fontWeight: '900', color: '#1e293b', marginBottom: '40px', textTransform: 'uppercase', textAlign: 'center' }}>Shipping Address</h2>
                             <form onSubmit={calculateShipping} style={{ display: 'grid', gap: '32px' }}>
                                 <div>
-                                    <label style={labelStyle}>Primary Facility Address</label>
+                                    <label style={labelStyle}>Address</label>
                                     <input value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="Street address or PO Box" style={inputStyle} />
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                                     <div>
-                                        <label style={labelStyle}>City / Municipality</label>
+                                        <label style={labelStyle}>City</label>
                                         <input value={city} onChange={(e) => setCity(e.target.value)} required style={inputStyle} />
                                     </div>
                                     <div>
-                                        <label style={labelStyle}>State / Province</label>
+                                        <label style={labelStyle}>State</label>
                                         <input value={province} onChange={(e) => setProvince(e.target.value)} required style={inputStyle} />
                                     </div>
                                 </div>
@@ -167,29 +169,29 @@ const Checkout = () => {
                                         <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} required style={inputStyle} />
                                     </div>
                                     <div>
-                                        <label style={labelStyle}>Country Code</label>
+                                        <label style={labelStyle}>Country</label>
                                         <input value={country} onChange={(e) => setCountry(e.target.value)} required style={inputStyle} />
                                     </div>
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>Logistics Contact Number</label>
+                                    <label style={labelStyle}>Phone Number</label>
                                     <input value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="+1 (555) 000-0000" style={inputStyle} />
                                 </div>
 
                                 {shippingRates.length === 0 ? (
                                     <button type="submit" disabled={loadingShipping} style={{ width: '100%', padding: '24px', background: '#0f3d91', color: '#ffffff', border: 'none', borderRadius: '20px', fontSize: '14px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(15,61,145,0.2)' }}>
-                                        {loadingShipping ? "Querying Fleet..." : "Verify Fulfillment Options"}
+                                        {loadingShipping ? "Calculating..." : "Calculate Shipping"}
                                     </button>
                                 ) : (
                                     <div style={{ marginTop: '20px', display: 'grid', gap: '20px' }}>
-                                        <p style={labelStyle}>Fulfillment Tiers</p>
+                                        <p style={labelStyle}>Shipping Methods</p>
                                         {shippingRates.map((rate) => (
                                             <div key={rate.id} onClick={() => setSelectedRate(rate)} style={{ padding: '24px', border: `2px solid ${selectedRate?.id === rate.id ? '#0f3d91' : '#f1f5f9'}`, borderRadius: '20px', cursor: 'pointer', background: selectedRate?.id === rate.id ? '#f8fafc' : '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                                                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `6px solid ${selectedRate?.id === rate.id ? '#0f3d91' : '#e2e8f0'}`, background: '#fff' }}></div>
                                                     <div>
                                                         <p style={{ fontWeight: '900', fontSize: '16px', color: '#1e293b', margin: '0 0 4px' }}>{rate.service}</p>
-                                                        <p style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8', margin: 0 }}>{rate.carrier} fulfillment</p>
+                                                        <p style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8', margin: 0 }}>{rate.carrier} shipping</p>
                                                     </div>
                                                 </div>
                                                 <span style={{ fontWeight: '900', color: '#0f3d91' }}>${parseFloat(rate.rate).toFixed(2)}</span>
@@ -206,48 +208,48 @@ const Checkout = () => {
                         </div>
                     )}
 
-                    {/* Step 2: Settlement */}
+                    {/* Step 2: Payment */}
                     {step === 2 && (
                         <div style={{ background: '#ffffff', borderRadius: '40px', border: '1px solid #f1f5f9', padding: '60px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.03)' }}>
                             <button onClick={() => setStep(1)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#64748b', fontWeight: '800', textTransform: 'uppercase', fontSize: '11px', marginBottom: '40px', cursor: 'pointer' }}>
-                                <ChevronLeft size={16} /> Return to Logistics
+                                <ChevronLeft size={16} /> Back to Shipping
                             </button>
                             <h2 style={{ fontSize: '20px', fontWeight: '900', color: '#1e293b', marginBottom: '40px', textTransform: 'uppercase', textAlign: 'center' }}>Confirm Order</h2>
                             
                             <div style={{ display: 'grid', gap: '32px' }}>
                                 <div style={{ background: '#f8fafc', padding: '32px', borderRadius: '24px', border: '1px solid #f1f5f9' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                                        <span style={labelStyle}>Total Invoice</span>
+                                        <span style={labelStyle}>Total Amount</span>
                                         <span style={{ fontSize: '36px', fontWeight: '900', color: '#0f3d91' }}>${totalPrice.toFixed(2)}</span>
                                     </div>
-                                    <p style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', margin: 0 }}>Includes basic taxation and {selectedRate?.carrier} {selectedRate?.service} enrollment.</p>
+                                    <p style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', margin: 0 }}>Includes tax and {selectedRate?.carrier} {selectedRate?.service} shipping.</p>
                                 </div>
 
                                 <div style={{ display: 'grid', gap: '24px' }}>
                                     <div>
-                                        <label style={labelStyle}>Corporate Card Number</label>
+                                        <label style={labelStyle}>Card Number</label>
                                         <div style={{ padding: '16px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}><div id="card-number" style={{ height: '24px' }}></div></div>
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                                         <div>
-                                            <label style={labelStyle}>Card Expiry Date</label>
+                                            <label style={labelStyle}>Expiry Date</label>
                                             <div style={{ padding: '16px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}><div id="card-date" style={{ height: '24px' }}></div></div>
                                         </div>
                                         <div>
-                                            <label style={labelStyle}>Card CVV</label>
+                                            <label style={labelStyle}>CVV</label>
                                             <div style={{ padding: '16px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}><div id="card-cvv" style={{ height: '24px' }}></div></div>
                                         </div>
                                     </div>
                                     <div>
-                                        <label style={labelStyle}>Billing Zip / Postal Code</label>
+                                        <label style={labelStyle}>Zip / Postal Code</label>
                                         <div style={{ padding: '16px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}><div id="card-postal-code" style={{ height: '24px' }}></div></div>
                                     </div>
                                     <button onClick={initPayment} disabled={loading} style={{ width: '100%', padding: '28px', background: '#0f3d91', color: '#ffffff', border: 'none', borderRadius: '24px', fontSize: '14px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(15,61,145,0.2)', marginTop: '20px' }}>
-                                        {loading ? "Authenticating Flow..." : "Confirm Order"}
+                                        {loading ? "Processing..." : "Confirm Order"}
                                     </button>
                                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', color: '#cbd5e1' }}>
                                         <Lock size={12} />
-                                        <span style={{ fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>End-to-End Encrypted Secure Gateway</span>
+                                        <span style={{ fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Secure Checkout</span>
                                     </div>
                                 </div>
                             </div>

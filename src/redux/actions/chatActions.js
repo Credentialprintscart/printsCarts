@@ -31,7 +31,8 @@ export const fetchAllChats = () => async (dispatch, getState) => {
             },
         };
 
-        const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chats`, config);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        const { data } = await axios.get(`${baseUrl}/chats`, config);
 
         dispatch({
             type: CHAT_LIST_SUCCESS,
@@ -62,7 +63,8 @@ export const fetchUserChat = () => async (dispatch, getState) => {
             },
         };
 
-        const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chats/my`, config);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        const { data } = await axios.get(`${baseUrl}/chats/my`, config);
 
         dispatch({
             type: CHAT_DETAILS_SUCCESS,
@@ -93,7 +95,8 @@ export const fetchChatById = (id) => async (dispatch, getState) => {
             },
         };
 
-        const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chats/${id}`, config);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        const { data } = await axios.get(`${baseUrl}/chats/${id}`, config);
 
         dispatch({
             type: CHAT_DETAILS_SUCCESS,
@@ -125,8 +128,9 @@ export const sendChatMessage = (chatId, message) => async (dispatch, getState) =
             },
         };
 
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
         const { data } = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}/messages`,
+            `${baseUrl}/chats/${chatId}/messages`,
             { message },
             config
         );
@@ -166,7 +170,8 @@ export const markChatAsRead = (chatId) => async (dispatch, getState) => {
             },
         };
 
-        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}/read`, {}, config);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        await axios.put(`${baseUrl}/chats/${chatId}/read`, {}, config);
 
         dispatch({
             type: CHAT_MARK_READ_SUCCESS,
