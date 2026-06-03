@@ -5,15 +5,18 @@ let transporter = null;
 const initializeTransporter = async () => {
   if (transporter) return transporter;
 
-  // Use the SMTP configuration from .env.local (Lines 44-47)
+  // Use the SMTP configuration from environment, with fallbacks to legacy FORM_DATA_* vars
+  const host = process.env.SMTP_HOST || process.env.FORM_DATA_HOST || 'localhost';
+  const port = parseInt(process.env.SMTP_PORT || process.env.FORM_DATA_SMTP_PORT || '465');
+  const user = process.env.SMTP_USER || process.env.FORM_DATA_MAIL || '';
+  const pass = process.env.SMTP_PASS || process.env.FORM_DATA_PASSWORD || '';
+  const secure = port === 465;
+
   transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'mail.printscarts.com',
-    port: parseInt(process.env.SMTP_PORT) || 465,
-    secure: true, // Force secure for port 465
-    auth: {
-      user: process.env.SMTP_USER || 'no-reply@printscarts.com',
-      pass: process.env.SMTP_PASS || '%y}r7f@mfA}o*r.H'
-    },
+    host,
+    port,
+    secure,
+    auth: user && pass ? { user, pass } : undefined,
     tls: {
       rejectUnauthorized: false,
       minVersion: 'TLSv1.2'
@@ -30,20 +33,36 @@ export const generateOTP = () => {
 export const sendEmail = async ({ to, subject, html, text, fromName, replyTo }) => {
   try {
     const mailTransporter = await initializeTransporter();
-    
-    const info = await mailTransporter.sendMail({
-      from: `"${fromName || 'PrintsCarts'}" <${process.env.SMTP_USER || 'no-reply@printscarts.com'}>`,
-      to: to || process.env.CONTACT_RECEIVER_EMAIL,
-      replyTo,
+    const defaultFromAddress = process.env.NO_REPLY_EMAIL || process.env.SMTP_USER || 'no-reply@printscarts.com';
+    const defaultTo = to || process.env.FORM_DATA_MAIL || process.env.CONTACT_RECEIVER_EMAIL;
+
+    if (!defaultTo) {
+      throw new Error('No recipient configured for outgoing emails. Set FORM_DATA_MAIL or CONTACT_RECEIVER_EMAIL in environment.');
+    }
+
+    const mailOptions = {
+      from: `"${fromName || 'PrintsCarts'}" <${defaultFromAddress}>`,
+      to: defaultTo,
+      replyTo: replyTo || undefined,
       subject,
       text,
-      html
-    });
+      html,
+      envelope: { from: defaultFromAddress, to: defaultTo }
+    };
+
+    console.log('Sending email:', { to: defaultTo, subject, from: defaultFromAddress });
+
+    const info = await mailTransporter.sendMail(mailOptions);
+
+    console.log('sendEmail response:', { messageId: info.messageId, response: info.response });
 
     console.log('Email sent: %s', info.messageId);
     return true;
   } catch (error) {
     console.error('Error sending email:', error);
+    if (process.env.NODE_ENV === 'development') {
+      throw error;
+    }
     return false;
   }
 };
@@ -73,14 +92,17 @@ export const sendOTPEmail = async (email, otp, type = 'registration') => {
       </div>
     `;
 
+    const fromAddress = process.env.NO_REPLY_EMAIL || process.env.SMTP_USER || 'no-reply@printscarts.com';
+
     const info = await mailTransporter.sendMail({
-      from: `"PrintsCarts Security" <${process.env.SMTP_USER || 'no-reply@printscarts.com'}>`,
+      from: `"PrintsCarts Security" <${fromAddress}>`,
       to: email,
       subject,
-      html
+      html,
+      envelope: { from: fromAddress, to: email }
     });
 
-    console.log('OTP Email sent: %s', info.messageId);
+    console.log('OTP Email sent:', { to: email, messageId: info.messageId, response: info.response });
     return true;
   } catch (error) {
     console.error('Nodemailer Error details:', {
@@ -89,6 +111,10 @@ export const sendOTPEmail = async (email, otp, type = 'registration') => {
       command: error.command,
       response: error.response
     });
+    if (process.env.NODE_ENV === 'development') {
+      // Re-throw in development so API routes can return the underlying error message for debugging
+      throw error;
+    }
     return false;
   }
 };

@@ -1,5 +1,5 @@
 .faqs-premium-wrapper {
-  padding: 120px 0 100px; /* Increased from 60px to 120px to clear fixed navbar */
+  padding: 36px 0 100px; /* reduced top padding; navbar spacer now handles primary offset */
   background-color: #f8fafc;
   min-height: 100vh;
 }

@@ -56,7 +56,7 @@ body {
 }
 
 main {
-  padding-top: 72px; /* Navbar height offset */
+  padding-top: 0; /* Layout offset handled by navbar spacer */
 }
 
 #root {

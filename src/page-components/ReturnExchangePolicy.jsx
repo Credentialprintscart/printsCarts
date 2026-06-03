@@ -56,8 +56,8 @@ const ReturnExchangePolicy = () => {
                             ) : (
                                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                     <div>
-                                        <label style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Order Number</label>
-                                        <input type="text" placeholder="Enter your order number" required style={{ width: '100%', padding: '14px 20px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', outline: 'none' }} />
+                                        <label style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Order Number (Optional)</label>
+                                        <input type="text" placeholder="Enter your order number (optional)" style={{ width: '100%', padding: '14px 20px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', outline: 'none' }} />
                                     </div>
                                     <div>
                                         <label style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Reason for Return / Exchange</label>

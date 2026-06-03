@@ -48,7 +48,7 @@ export async function POST(req) {
     const emailSent = await sendOTPEmail(normalizedEmail, otp, 'registration');
 
     if (emailSent) {
-      return successResponse({ message: 'OTP sent successfully' });
+      return successResponse({ message: 'OTP sent successfully', otp: process.env.NODE_ENV === 'development' ? otp : undefined });
     } else {
       return errorResponse('Failed to send email. Please check your SMTP settings.', 500);
     }

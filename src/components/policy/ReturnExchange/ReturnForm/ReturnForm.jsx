@@ -129,15 +129,14 @@ const ReturnForm = () => {
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="orderNumber">Order Number*</label>
+                    <label htmlFor="orderNumber">Order Number (Optional)</label>
                     <input
                         type="text"
                         id="orderNumber"
                         name="orderNumber"
                         value={formData.orderNumber}
                         onChange={handleChange}
-                        placeholder="Enter your order number"
-                        required
+                        placeholder="Enter your order number (optional)"
                     />
                 </div>
 

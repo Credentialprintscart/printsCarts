@@ -28,7 +28,7 @@ const MyOrders = () => {
         <div style={{ background: '#f8fafc', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
             
             
-            <main style={{ paddingTop: '100px', paddingBottom: '120px' }}>
+            <main style={{ paddingTop: '48px', paddingBottom: '120px' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
                     
                     {/* PAGE HUB CONTAINER */}
