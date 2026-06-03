@@ -32,6 +32,8 @@ const AdminLayout = ({ children }) => {
     const router = useRouter();
     const dispatch = useDispatch();
     const { userInfo } = useSelector((state) => state.userLogin);
+    const prevOrderCountRef = useRef(0);
+    const prevChatCountRef = useRef(0);
 
     useEffect(() => {
         setMounted(true);
@@ -41,8 +43,6 @@ const AdminLayout = ({ children }) => {
             router.push('/admin/login');
         }
 
-        const prevOrderCountRef = useRef(0);
-        const prevChatCountRef = useRef(0);
 
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
 
