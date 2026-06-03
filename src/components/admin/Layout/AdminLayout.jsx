@@ -1,8 +1,7 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
-import { io } from 'socket.io-client';
 import { 
     Bell, 
     Search, 
@@ -42,31 +41,68 @@ const AdminLayout = ({ children }) => {
             router.push('/admin/login');
         }
 
-        const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
-        
-        socket.on('newOrder', (order) => {
-            setNotifications(prev => [{
-                id: Date.now(),
-                type: 'order',
-                message: `New Order #${order._id.slice(-6)}`,
-                time: 'Just now',
-                read: false
-            }, ...prev]);
-        });
+        const prevOrderCountRef = useRef(0);
+        const prevChatCountRef = useRef(0);
 
-        socket.on('newChat', (chat) => {
-            setNotifications(prev => [{
-                id: Date.now(),
-                type: 'chat',
-                message: `New message from ${chat.senderName}`,
-                time: 'Just now',
-                read: false
-            }, ...prev]);
-        });
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+
+        const fetchNotifications = async () => {
+            try {
+                const headers = { Authorization: `Bearer ${userInfo.token}` };
+
+                // Orders
+                const ordersRes = await fetch(`${baseUrl}/orders?fetchAll=true`, { headers });
+                if (ordersRes.ok) {
+                    const orderData = await ordersRes.json();
+                    const orderCount = orderData.count ?? (orderData.orders ? orderData.orders.length : 0);
+                    if (prevOrderCountRef.current === 0) {
+                        prevOrderCountRef.current = orderCount;
+                    } else if (orderCount > prevOrderCountRef.current) {
+                        prevOrderCountRef.current = orderCount;
+                        const newest = orderData.orders && orderData.orders[0];
+                        if (newest) {
+                            setNotifications(prev => [{
+                                id: Date.now(),
+                                type: 'order',
+                                message: `New Order #${(newest._id || '').slice(-6)}`,
+                                time: 'Just now',
+                                read: false
+                            }, ...prev]);
+                        }
+                    }
+                }
+
+                // Chats
+                const chatsRes = await fetch(`${baseUrl}/chats`, { headers });
+                if (chatsRes.ok) {
+                    const chatsData = await chatsRes.json();
+                    const chatsCount = Array.isArray(chatsData) ? chatsData.length : (chatsData.count || 0);
+                    if (prevChatCountRef.current === 0) {
+                        prevChatCountRef.current = chatsCount;
+                    } else if (chatsCount > prevChatCountRef.current) {
+                        prevChatCountRef.current = chatsCount;
+                        const newestChat = Array.isArray(chatsData) ? chatsData[0] : null;
+                        setNotifications(prev => [{
+                            id: Date.now(),
+                            type: 'chat',
+                            message: `New message from ${newestChat?.user?.name || 'User'}`,
+                            time: 'Just now',
+                            read: false
+                        }, ...prev]);
+                    }
+                }
+            } catch (err) {
+                console.error('Notification polling error:', err);
+            }
+        };
+
+        // initial fetch and start polling
+        fetchNotifications();
+        const pollId = setInterval(fetchNotifications, 5000);
 
         return () => {
             clearInterval(timer);
-            socket.disconnect();
+            clearInterval(pollId);
         };
     }, [userInfo, router]);
 

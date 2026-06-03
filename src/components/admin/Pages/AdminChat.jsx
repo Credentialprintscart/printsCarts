@@ -7,12 +7,12 @@ import {
     ChevronLeft, Activity, Globe, Clock,
     CheckCircle2, Shield
 } from 'lucide-react';
-import io from 'socket.io-client';
+// Socket.io removed for serverless platforms (Vercel). Using polling instead.
 
 const AdminChat = () => {
     const dispatch = useDispatch();
     const messagesEndRef = useRef(null);
-    const [socket, setSocket] = useState(null);
+    const pollingRef = useRef(null);
     const [showMobileList, setShowMobileList] = useState(true);
     const [activeChat, setActiveChat] = useState(null);
     const [newMessage, setNewMessage] = useState('');
@@ -28,33 +28,31 @@ const AdminChat = () => {
     const { chat: currentChat } = chatDetails;
 
     useEffect(() => {
+        // Fallback polling for new chat/messages (compatible with serverless)
+        let pollId = null;
         if (userInfo && userInfo.isAdmin) {
             dispatch(fetchAllChats());
 
-            const socketUrl = process.env.NEXT_PUBLIC_API_URL?.startsWith('http') 
-                ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '') 
-                : window.location.origin;
-
-            const newSocket = io(socketUrl, {
-                auth: { token: userInfo.token },
-                path: '/socket.io',
-                transports: ['websocket', 'polling']
-            });
-
-            newSocket.on('connect', () => {
-                console.log('Admin Secure Link Established');
-            });
-
-            newSocket.on('new-message', (data) => {
-                dispatch(fetchAllChats());
-                if (activeChat && data.chatId === activeChat._id) {
-                    dispatch(fetchChatById(data.chatId));
+            const poll = () => {
+                try {
+                    dispatch(fetchAllChats());
+                    if (activeChat) {
+                        dispatch(fetchChatById(activeChat._id));
+                    }
+                } catch (err) {
+                    console.error('Polling error:', err);
                 }
-            });
+            };
 
-            setSocket(newSocket);
-            return () => newSocket.close();
+            // initial poll and then interval
+            poll();
+            pollId = setInterval(poll, 4000);
+            pollingRef.current = pollId;
         }
+
+        return () => {
+            if (pollId) clearInterval(pollId);
+        };
     }, [dispatch, userInfo, activeChat?._id]);
 
     useEffect(() => {
@@ -74,9 +72,7 @@ const AdminChat = () => {
             dispatch(markChatAsRead(chat._id));
         }
 
-        if (socket) {
-            socket.emit('join-chat', chat._id);
-        }
+        // Polling will fetch chat details shortly; no socket emit in serverless mode.
     };
 
     const handleSend = (e) => {
@@ -85,17 +81,7 @@ const AdminChat = () => {
 
         dispatch(sendChatMessage(activeChat._id, newMessage));
 
-        if (socket) {
-            socket.emit('send-message', {
-                chatId: activeChat._id,
-                message: newMessage,
-                sender: {
-                    _id: userInfo._id,
-                    name: userInfo.name,
-                    isAdmin: true
-                }
-            });
-        }
+        // Messages are sent via REST action; polling will refresh the UI.
 
         setNewMessage('');
     };
