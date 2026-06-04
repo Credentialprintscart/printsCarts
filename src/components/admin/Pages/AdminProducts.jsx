@@ -149,6 +149,10 @@ const AdminProducts = () => {
 
     const ARRAY_FIELDS = ['technology', 'usageCategory', 'allInOneType', 'mainFunction'];
 
+    // Helper to detect if the selected category is Ink & Toner
+    const selectedCategoryObj = categories?.find(c => c._id === formData.category);
+    const isInkTonerSelected = !!(selectedCategoryObj?.name && selectedCategoryObj.name.toLowerCase().includes('ink') && selectedCategoryObj.name.toLowerCase().includes('toner'));
+
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         if (type === 'checkbox' && ARRAY_FIELDS.includes(name)) {
@@ -161,7 +165,15 @@ const AdminProducts = () => {
                 }
             });
         } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
+            // When the category changes, clear wireless if the new domain is Ink & Toner
+            if (name === 'category') {
+                const selectedCat = categories?.find(c => c._id === value);
+                const catName = selectedCat?.name || '';
+                const isInkToner = catName && catName.toLowerCase().includes('ink') && catName.toLowerCase().includes('toner');
+                setFormData(prev => ({ ...prev, [name]: value, ...(isInkToner ? { wireless: '' } : {}) }));
+            } else {
+                setFormData(prev => ({ ...prev, [name]: value }));
+            }
         }
     };
 
@@ -213,11 +225,21 @@ const AdminProducts = () => {
         setEditingId(product._id);
         const techSpec = product.technicalSpecification || '';
 
+        // Determine category name (product.category may be an object or an id)
+        let categoryName = '';
+        if (product.category && typeof product.category === 'object') {
+            categoryName = product.category.name || '';
+        } else if (product.category) {
+            const cat = categories?.find(c => c._id === (product.category?._id || product.category));
+            categoryName = cat?.name || '';
+        }
+        const isInkTonerProduct = categoryName && categoryName.toLowerCase().includes('ink') && categoryName.toLowerCase().includes('toner');
+
         setFormData({
             technology: Array.isArray(product.technology) ? product.technology : [],
             usageCategory: Array.isArray(product.usageCategory) ? product.usageCategory : [],
             allInOneType: Array.isArray(product.allInOneType) ? product.allInOneType : [],
-            wireless: typeof product.wireless === 'string' ? product.wireless : '',
+            wireless: isInkTonerProduct ? '' : (typeof product.wireless === 'string' ? product.wireless : ''),
             mainFunction: Array.isArray(product.mainFunction) ? product.mainFunction : [],
             brand: product.brand || '',
             title: product.title || '',
@@ -669,18 +691,20 @@ const AdminProducts = () => {
                                                     ))}
                                                 </div>
 
-                                                <div className="space-y-2">
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Wireless Capability</label>
-                                                    <select
-                                                        name="wireless"
-                                                        value={formData.wireless}
-                                                        onChange={handleInputChange}
-                                                        className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-600 transition-all appearance-none shadow-sm"
-                                                    >
-                                                        <option value="">Select Option</option>
-                                                        {WIRELESS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                                    </select>
-                                                </div>
+                                                {!isInkTonerSelected && (
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Wireless Capability</label>
+                                                        <select
+                                                            name="wireless"
+                                                            value={formData.wireless}
+                                                            onChange={handleInputChange}
+                                                            className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-600 transition-all appearance-none shadow-sm"
+                                                        >
+                                                            <option value="">Select Option</option>
+                                                            {WIRELESS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                        </select>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-6">
